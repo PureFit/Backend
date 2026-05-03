@@ -36,7 +36,8 @@ public class JwtService : IJwtService
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                ExpiresAt = expiresAt
+                ExpiresAt = expiresAt,
+                Username = user.Username
             });
         }
         catch (Exception ex)

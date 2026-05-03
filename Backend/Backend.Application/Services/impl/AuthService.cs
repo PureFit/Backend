@@ -13,6 +13,7 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IAuthRepository _authRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserInfoRepository _userInfoRepository;
     private readonly JwtSettings _jwtSettings;
     private readonly IImageOrchestratorService _imageService;
     private readonly IJwtService _jwtService;
@@ -21,12 +22,14 @@ public class AuthService : IAuthService
         ILogger<AuthService> logger,
         IAuthRepository authRepository,
         IRefreshTokenRepository refreshTokenRepository,
+        IUserInfoRepository userInfoRepository,
         IOptions<JwtSettings> options,
         IImageOrchestratorService imageService,
         IJwtService jwtService)
     {
         _authRepository = authRepository ?? throw new ArgumentNullException(nameof(IAuthRepository));
         _refreshTokenRepository = refreshTokenRepository ?? throw new ArgumentNullException(nameof(IRefreshTokenRepository));
+        _userInfoRepository = userInfoRepository ?? throw new ArgumentNullException(nameof(IUserInfoRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(ILogger<AuthService>));
         _jwtSettings = options.Value ?? throw new ArgumentNullException(nameof(IOptions<JwtSettings>));
         _imageService = imageService ?? throw new ArgumentNullException(nameof(IImageOrchestratorService));
@@ -126,6 +129,7 @@ public class AuthService : IAuthService
             _logger.LogInformation("User {Username} logged in successfully. UserId: {UserId}", user.Username, user.Id);
 
             var token = await _jwtService.GenerateToken(user);
+            token.HasProfile = await _userInfoRepository.GetByUserIdAsync(user.Id) != null;
 
             return BaseResponse<AuthTokenDto>.Ok(token);
         }
