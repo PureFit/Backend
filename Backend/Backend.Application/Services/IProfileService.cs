@@ -13,5 +13,6 @@ public interface IProfileService
     Task<BaseResponse<bool>> ConnectGoogleCalendarAsync(Guid userId, string serverAuthCode);
     Task<BaseResponse<List<GoogleCalendarEventDto>>> GetGoogleCalendarEventsAsync(Guid userId, DateTime from, DateTime to);
     Task<BaseResponse<bool>> DisconnectGoogleCalendarAsync(Guid userId);
-    Task<BaseResponse<bool>> IsCalendarConnectedAsync(Guid userId);
+    Task<BaseResponse<CalendarStatusDto>> GetCalendarStatusAsync(Guid userId);
+    Task<BaseResponse<bool>> ToggleCalendarActiveAsync(Guid userId, bool isActive);
 }
