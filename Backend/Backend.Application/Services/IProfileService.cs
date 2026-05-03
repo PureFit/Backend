@@ -9,4 +9,9 @@ public interface IProfileService
     Task<BaseResponse<bool>> HasProfileAsync(Guid userId);
     Task<BaseResponse<bool>> UpdateWeightAsync(Guid userId, decimal weightKg);
     Task<BaseResponse<List<WeightEntryDto>>> GetWeightHistoryAsync(Guid userId, int limit = 30);
+    Task<BaseResponse<ProfileDto>> GetProfileAsync(Guid userId);
+    Task<BaseResponse<bool>> ConnectGoogleCalendarAsync(Guid userId, string serverAuthCode);
+    Task<BaseResponse<List<GoogleCalendarEventDto>>> GetGoogleCalendarEventsAsync(Guid userId, DateTime from, DateTime to);
+    Task<BaseResponse<bool>> DisconnectGoogleCalendarAsync(Guid userId);
+    Task<BaseResponse<bool>> IsCalendarConnectedAsync(Guid userId);
 }

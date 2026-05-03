@@ -12,7 +12,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
         builder.Property(u => u.Email).IsRequired().HasMaxLength(255);
-        builder.Property(u => u.PasswordHash).IsRequired();
+        builder.Property(u => u.PasswordHash).HasMaxLength(256).IsRequired(false);
+        builder.Property(u => u.GoogleId).HasMaxLength(128).IsRequired(false);
+        builder.Property(u => u.AuthProvider).IsRequired().HasConversion<string>();
         builder.Property(u => u.AvatarUrl).HasMaxLength(500).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired();
 

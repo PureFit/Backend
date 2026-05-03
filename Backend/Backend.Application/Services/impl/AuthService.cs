@@ -6,6 +6,7 @@ using Backend.Application.Repositories;
 using Backend.Core.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Backend.Application.Services;
 namespace Backend.Application.Services.impl;
 
 public class AuthService : IAuthService
@@ -17,6 +18,7 @@ public class AuthService : IAuthService
     private readonly JwtSettings _jwtSettings;
     private readonly IImageOrchestratorService _imageService;
     private readonly IJwtService _jwtService;
+    private readonly IGoogleOAuthService _googleOAuthService;
 
     public AuthService(
         ILogger<AuthService> logger,
@@ -25,7 +27,8 @@ public class AuthService : IAuthService
         IUserInfoRepository userInfoRepository,
         IOptions<JwtSettings> options,
         IImageOrchestratorService imageService,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IGoogleOAuthService googleOAuthService)
     {
         _authRepository = authRepository ?? throw new ArgumentNullException(nameof(IAuthRepository));
         _refreshTokenRepository = refreshTokenRepository ?? throw new ArgumentNullException(nameof(IRefreshTokenRepository));
@@ -34,6 +37,7 @@ public class AuthService : IAuthService
         _jwtSettings = options.Value ?? throw new ArgumentNullException(nameof(IOptions<JwtSettings>));
         _imageService = imageService ?? throw new ArgumentNullException(nameof(IImageOrchestratorService));
         _jwtService = jwtService ?? throw new ArgumentNullException(nameof(IJwtService));
+        _googleOAuthService = googleOAuthService ?? throw new ArgumentNullException(nameof(IGoogleOAuthService));
     }
 
     private async Task<bool> EmailExists(string email) =>
@@ -120,6 +124,12 @@ public class AuthService : IAuthService
                 return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidCredentials.ToString());
             }
 
+            if (user.AuthProvider != AuthProvider.Local || user.PasswordHash == null)
+            {
+                _logger.LogWarning("Email/password login attempted for Google account {Email}", request.Email);
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.WrongAuthProvider.ToString());
+            }
+
             if (!request.Password.VerifyPassword(user.PasswordHash))
             {
                 _logger.LogWarning("Invalid password for user {Username}. UserId: {UserId}", user.Username, user.Id);
@@ -186,6 +196,74 @@ public class AuthService : IAuthService
             _logger.LogError(ex, "Unexpected error during token refresh");
             return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
         }
+    }
+
+    public async Task<BaseResponse<AuthTokenDto>> GoogleLoginAsync(string idToken)
+    {
+        try
+        {
+            var googleUser = await _googleOAuthService.VerifyIdTokenAsync(idToken);
+            if (googleUser == null)
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.GoogleAuthFailed.ToString());
+
+            var user = await _authRepository.GetByGoogleIdAsync(googleUser.GoogleId)
+                       ?? await _authRepository.GetByEmailAsync(googleUser.Email);
+
+            if (user == null)
+            {
+                // New user — register via Google
+                var username = await GenerateUniqueUsernameAsync(googleUser.Name);
+                user = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Username = username,
+                    Email = googleUser.Email,
+                    AvatarUrl = googleUser.PictureUrl,
+                    GoogleId = googleUser.GoogleId,
+                    AuthProvider = AuthProvider.Google,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _authRepository.AddAsync(user);
+                _logger.LogInformation("New user registered via Google: {Email}", googleUser.Email);
+            }
+            else if (user.GoogleId == null)
+            {
+                // Existing email/password user — link Google account
+                user.GoogleId = googleUser.GoogleId;
+                user.AuthProvider = AuthProvider.Google;
+                if (user.AvatarUrl == null) user.AvatarUrl = googleUser.PictureUrl;
+                await _authRepository.UpdateAsync(user);
+                _logger.LogInformation("Linked Google account for existing user: {Email}", user.Email);
+            }
+
+            var token = await _jwtService.GenerateToken(user);
+            token.HasProfile = await _userInfoRepository.GetByUserIdAsync(user.Id) != null;
+            return BaseResponse<AuthTokenDto>.Ok(token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during Google login");
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
+        }
+    }
+
+    private async Task<string> GenerateUniqueUsernameAsync(string displayName)
+    {
+        var base_ = new string(displayName
+            .ToLower()
+            .Replace(" ", "_")
+            .Where(c => char.IsLetterOrDigit(c) || c == '_')
+            .Take(20)
+            .ToArray());
+
+        if (string.IsNullOrEmpty(base_)) base_ = "user";
+
+        var candidate = base_;
+        var suffix = 1;
+        while (await UsernameExists(candidate))
+            candidate = $"{base_}{suffix++}";
+
+        return candidate;
     }
 
     public async Task<BaseResponse<bool>> LogoutAsync(string refreshToken)

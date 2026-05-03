@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserInfo> UserInfos { get; set; }
     public DbSet<UserMetricLog> UserMetricLogs { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<UserGoogleToken> UserGoogleTokens { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
