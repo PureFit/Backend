@@ -153,8 +153,8 @@ public class ProfileService : IProfileService
         try
         {
             var tokenRecord = await _googleTokenRepository.GetByUserIdAsync(userId);
-            if (tokenRecord == null)
-                return BaseResponse<List<GoogleCalendarEventDto>>.Fail(ErrorEnums.CalendarNotConnected.ToString());
+            if (tokenRecord == null || !tokenRecord.IsActive)
+                return BaseResponse<List<GoogleCalendarEventDto>>.Ok(new List<GoogleCalendarEventDto>());
 
             // Refresh token if expired
             if (tokenRecord.AccessTokenExpiresAt <= DateTime.UtcNow.AddMinutes(5))
@@ -180,14 +180,25 @@ public class ProfileService : IProfileService
 
     public async Task<BaseResponse<bool>> DisconnectGoogleCalendarAsync(Guid userId)
     {
-        await _googleTokenRepository.SetActiveAsync(userId, false);
+        await _googleTokenRepository.DeleteByUserIdAsync(userId);
         return BaseResponse<bool>.Ok(true);
     }
 
-    public async Task<BaseResponse<bool>> IsCalendarConnectedAsync(Guid userId)
+    public async Task<BaseResponse<CalendarStatusDto>> GetCalendarStatusAsync(Guid userId)
     {
         var token = await _googleTokenRepository.GetByUserIdAsync(userId);
-        return BaseResponse<bool>.Ok(token != null && token.IsActive);
+        return BaseResponse<CalendarStatusDto>.Ok(new CalendarStatusDto
+        {
+            IsConnected = token != null,
+            IsActive = token?.IsActive ?? false,
+            ConnectedEmail = token?.ConnectedEmail
+        });
+    }
+
+    public async Task<BaseResponse<bool>> ToggleCalendarActiveAsync(Guid userId, bool isActive)
+    {
+        await _googleTokenRepository.SetActiveAsync(userId, isActive);
+        return BaseResponse<bool>.Ok(true);
     }
 
     public async Task<BaseResponse<ProfileDto>> GetProfileAsync(Guid userId)

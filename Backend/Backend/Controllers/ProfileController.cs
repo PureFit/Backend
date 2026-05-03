@@ -76,7 +76,15 @@ public class ProfileController : BaseController
     public async Task<IActionResult> CalendarStatus()
     {
         var userId = GetUserIdFromClaims();
-        var result = await _profileService.IsCalendarConnectedAsync(userId);
+        var result = await _profileService.GetCalendarStatusAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpPut("calendar/toggle")]
+    public async Task<IActionResult> ToggleCalendar([FromQuery] bool isActive)
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _profileService.ToggleCalendarActiveAsync(userId, isActive);
         return Ok(result);
     }
 
