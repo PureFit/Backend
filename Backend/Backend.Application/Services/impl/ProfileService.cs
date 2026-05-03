@@ -180,14 +180,14 @@ public class ProfileService : IProfileService
 
     public async Task<BaseResponse<bool>> DisconnectGoogleCalendarAsync(Guid userId)
     {
-        await _googleTokenRepository.DeleteByUserIdAsync(userId);
+        await _googleTokenRepository.SetActiveAsync(userId, false);
         return BaseResponse<bool>.Ok(true);
     }
 
     public async Task<BaseResponse<bool>> IsCalendarConnectedAsync(Guid userId)
     {
         var token = await _googleTokenRepository.GetByUserIdAsync(userId);
-        return BaseResponse<bool>.Ok(token != null);
+        return BaseResponse<bool>.Ok(token != null && token.IsActive);
     }
 
     public async Task<BaseResponse<ProfileDto>> GetProfileAsync(Guid userId)
