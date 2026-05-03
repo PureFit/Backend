@@ -31,6 +31,7 @@ public class UserGoogleTokenRepository : IUserGoogleTokenRepository
             existing.AccessTokenExpiresAt = token.AccessTokenExpiresAt;
             existing.ConnectedEmail = token.ConnectedEmail;
             existing.ConnectedAt = token.ConnectedAt;
+            existing.IsActive = true;
             _db.UserGoogleTokens.Update(existing);
         }
         await _db.SaveChangesAsync();
@@ -42,6 +43,16 @@ public class UserGoogleTokenRepository : IUserGoogleTokenRepository
         if (token != null)
         {
             _db.UserGoogleTokens.Remove(token);
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    public async Task SetActiveAsync(Guid userId, bool isActive)
+    {
+        var token = await _db.UserGoogleTokens.FirstOrDefaultAsync(t => t.UserId == userId);
+        if (token != null)
+        {
+            token.IsActive = isActive;
             await _db.SaveChangesAsync();
         }
     }
