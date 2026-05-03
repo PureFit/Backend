@@ -16,6 +16,11 @@ public enum ErrorEnums
     // Image
     ImageSaveError,
 
+    // Google
+    GoogleAuthFailed,
+    WrongAuthProvider,
+    CalendarNotConnected,
+
     // General
     UnknownError
 }

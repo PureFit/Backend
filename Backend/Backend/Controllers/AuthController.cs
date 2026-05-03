@@ -3,6 +3,7 @@ using Backend.Application.DTOs.Auth;
 using Backend.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace Backend.Controllers;
 
@@ -37,6 +38,13 @@ public class AuthController : BaseController
         return result.Success ? Ok(result) : HandleAuthError(result);
     }
 
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthRequest request)
+    {
+        var result = await _authService.GoogleLoginAsync(request.IdToken);
+        return result.Success ? Ok(result) : HandleAuthError(result);
+    }
+
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
@@ -53,6 +61,8 @@ public class AuthController : BaseController
             nameof(ErrorEnums.PasswordsMismatch) => BadRequest(result),
             nameof(ErrorEnums.InvalidCredentials) => Unauthorized(result),
             nameof(ErrorEnums.InvalidRefreshToken) => Unauthorized(result),
+            nameof(ErrorEnums.WrongAuthProvider) => BadRequest(result),
+            nameof(ErrorEnums.GoogleAuthFailed) => Unauthorized(result),
             nameof(ErrorEnums.ImageSaveError) => StatusCode(500, result),
             _ => HandleError(result)
         };
