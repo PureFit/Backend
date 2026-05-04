@@ -36,6 +36,15 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
 builder.Services.Configure<SvgSettings>(builder.Configuration.GetSection("SvgSettings"));
+builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("RedisConfig"));
+
+var redisConnectionString = builder.Configuration["RedisConfig:ConnectionString"]!;
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = builder.Configuration["RedisConfig:KeyPrefix"];
+});
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

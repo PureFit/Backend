@@ -31,11 +31,12 @@ public class ExerciseApiClient : IExternalExerciseRepository
     public async Task<ExercisePagedResult> GetExercisesAsync(ExerciseFilter filter)
     {
         var query = new StringBuilder("exercises?");
-        if (!string.IsNullOrEmpty(filter.BodyPart)) query.Append($"bodyPart={Uri.EscapeDataString(filter.BodyPart)}&");
-        if (!string.IsNullOrEmpty(filter.Muscle))   query.Append($"muscle={Uri.EscapeDataString(filter.Muscle)}&");
-        if (!string.IsNullOrEmpty(filter.Equipment)) query.Append($"equipment={Uri.EscapeDataString(filter.Equipment)}&");
-        if (!string.IsNullOrEmpty(filter.Type))     query.Append($"type={Uri.EscapeDataString(filter.Type)}&");
-        if (!string.IsNullOrEmpty(filter.Cursor))   query.Append($"after={Uri.EscapeDataString(filter.Cursor)}&");
+        if (!string.IsNullOrEmpty(filter.Keywords))  query.Append($"keywords={Uri.EscapeDataString(filter.Keywords)}&");
+        if (!string.IsNullOrEmpty(filter.BodyPart))  query.Append($"bodyParts={Uri.EscapeDataString(filter.BodyPart)}&");
+        if (!string.IsNullOrEmpty(filter.Muscle))    query.Append($"targetMuscles={Uri.EscapeDataString(filter.Muscle)}&");
+        if (!string.IsNullOrEmpty(filter.Equipment)) query.Append($"equipments={Uri.EscapeDataString(filter.Equipment)}&");
+        if (!string.IsNullOrEmpty(filter.Type))      query.Append($"exerciseType={Uri.EscapeDataString(filter.Type)}&");
+        if (!string.IsNullOrEmpty(filter.Cursor))    query.Append($"after={Uri.EscapeDataString(filter.Cursor)}&");
         query.Append($"limit={filter.Limit}");
 
         var response = await _httpClient.GetFromJsonAsync<ExerciseApiResponse>(query.ToString());
@@ -60,6 +61,8 @@ public class ExerciseApiClient : IExternalExerciseRepository
     {
         var response = await _httpClient.GetFromJsonAsync<DetailedExerciseResponse>($"exercises/{externalId}");
         if (response == null || !response.Success) return null;
+        _logger.LogInformation("Exercise detail: id={Id}, videoUrl={VideoUrl}, imageUrl={ImageUrl}",
+            response.Data.ExerciseId, response.Data.VideoUrl ?? "NULL", response.Data.ImageUrl);
         return MapToDetailsDto(response.Data);
     }
 
