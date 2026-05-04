@@ -35,13 +35,17 @@ public class ExerciseApiClient : IExternalExerciseRepository
         if (!string.IsNullOrEmpty(filter.Muscle))   query.Append($"muscle={Uri.EscapeDataString(filter.Muscle)}&");
         if (!string.IsNullOrEmpty(filter.Equipment)) query.Append($"equipment={Uri.EscapeDataString(filter.Equipment)}&");
         if (!string.IsNullOrEmpty(filter.Type))     query.Append($"type={Uri.EscapeDataString(filter.Type)}&");
-        if (!string.IsNullOrEmpty(filter.Cursor))   query.Append($"cursor={Uri.EscapeDataString(filter.Cursor)}&");
+        if (!string.IsNullOrEmpty(filter.Cursor))   query.Append($"after={Uri.EscapeDataString(filter.Cursor)}&");
         query.Append($"limit={filter.Limit}");
 
         var response = await _httpClient.GetFromJsonAsync<ExerciseApiResponse>(query.ToString());
 
         if (response == null || !response.Success)
             return new ExercisePagedResult();
+
+        _logger.LogInformation(
+            "ExerciseApi meta: total={Total}, hasNextPage={HasNextPage}, nextCursor={NextCursor}",
+            response.Meta.Total, response.Meta.HasNextPage, response.Meta.NextCursor ?? "NULL");
 
         return new ExercisePagedResult
         {

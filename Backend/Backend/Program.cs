@@ -35,6 +35,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
+builder.Services.Configure<SvgSettings>(builder.Configuration.GetSection("SvgSettings"));
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -70,6 +71,9 @@ builder.Services.Configure<ExerciseApiSettings>(builder.Configuration.GetSection
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddScoped<IExternalExerciseRepository, ExerciseApiClient>();
 builder.Services.AddHttpClient<ExerciseApiClient>();
+
+builder.Services.AddScoped<ISvgManipulationService, SvgManipulationService>();
+builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationService>();
 
 var app = builder.Build();
 
