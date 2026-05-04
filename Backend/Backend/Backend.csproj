@@ -25,4 +25,13 @@
     <ProjectReference Include="..\Backend.Application\Backend.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Data\newMan.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\newWoman.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
