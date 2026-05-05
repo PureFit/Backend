@@ -77,7 +77,7 @@ builder.Services.AddScoped<IGoogleOAuthService, GoogleOAuthService>();
 builder.Services.AddHttpClient<GoogleOAuthService>();
 
 builder.Services.Configure<ExerciseApiSettings>(builder.Configuration.GetSection("ExerciseApi"));
-builder.Services.AddScoped<IExerciseService, ExerciseService>();
+builder.Services.AddScoped<ITrainingSetService, ExerciseService>();
 builder.Services.AddScoped<IExternalExerciseRepository, ExerciseApiClient>();
 builder.Services.AddHttpClient<ExerciseApiClient>();
 

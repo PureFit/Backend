@@ -21,10 +21,7 @@ namespace Backend.Core.Entities.TrainingRelated
                                                                              // And then we can add a logic that user could choose instance on google calendar to say to us that this is a training.
                                                                              // and we will add this to our db also as an external training. and depending on it change the training plan.
 
-        public List<TrainingSession> InternalTrainings { get; set; } = []; // training from our system but not related to the plan.
-                                                                           // Maybe add a feature of adding it to google calendar but then we need to synchronise it when show the calendar.
-
-        public List<PlanTraining> PlanTrainings { get; set; } = [];
+public List<PlanTraining> PlanTrainings { get; set; } = [];
 
         public Guid AIPlanId { get; set; }
         public AIPlan AIPlan { get; set; } = null!;
