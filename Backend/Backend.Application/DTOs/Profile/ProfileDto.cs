@@ -10,5 +10,5 @@ public class ProfileDto
     public string FitnessLevel { get; set; } = null!;
     public decimal WeightKg { get; set; }
     public int HeightCm { get; set; }
-    public int Age { get; set; }
+    public DateOnly DateOfBirth { get; set; }
 }

@@ -221,7 +221,7 @@ public class ProfileService : IProfileService
                 FitnessLevel = info.Level.ToString(),
                 WeightKg = info.WeightKg,
                 HeightCm = (int)info.HeightCm,
-                Age = info.Age
+                DateOfBirth = info.DateOfBirth
             });
         }
         catch (Exception ex)
