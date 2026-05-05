@@ -14,12 +14,6 @@ public class TrainingSessionConfiguration : IEntityTypeConfiguration<TrainingSes
                .HasForeignKey(s => s.UserInfoId)
                .OnDelete(DeleteBehavior.Cascade);
 
-        // Привязка к неделе плана — опциональная (только для свободных тренировок с планом).
-        builder.HasOne(s => s.WeekPlan)
-               .WithMany(w => w.InternalTrainings)
-               .HasForeignKey(s => s.WeekPlanId)
-               .OnDelete(DeleteBehavior.SetNull);
-
         // Привязка к плановой тренировке — опциональная.
         builder.HasOne(s => s.PlanTraining)
                .WithOne(p => p.TrainingSession)
