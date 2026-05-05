@@ -14,7 +14,7 @@ public static class UserInfoMapper
             Level = request.FitnessLevel,
             WeightKg = request.WeightKg,
             HeightCm = request.HeightCm,
-            Age = request.Age
+            DateOfBirth = request.DateOfBirth
         };
 
     public static void UpdateEntity(this CompleteProfileRequest request, UserInfo existing)
@@ -23,6 +23,6 @@ public static class UserInfoMapper
         existing.Level = request.FitnessLevel;
         existing.WeightKg = request.WeightKg;
         existing.HeightCm = request.HeightCm;
-        existing.Age = request.Age;
+        existing.DateOfBirth = request.DateOfBirth;
     }
 }

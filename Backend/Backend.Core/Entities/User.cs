@@ -1,3 +1,5 @@
+using Backend.Core.Entities.TrainingRelated;
+
 namespace Backend.Core.Entities;
 
 public enum AuthProvider

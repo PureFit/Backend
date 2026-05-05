@@ -8,5 +8,5 @@ public class CompleteProfileRequest
     public Level FitnessLevel { get; set; }
     public decimal WeightKg { get; set; }
     public int HeightCm { get; set; }
-    public int Age { get; set; }
+    public DateOnly DateOfBirth { get; set; }
 }
