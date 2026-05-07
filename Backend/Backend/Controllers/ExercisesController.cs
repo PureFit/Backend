@@ -9,9 +9,9 @@ namespace Backend.Controllers;
 [Route("api/exercises")]
 public class ExercisesController : BaseController
 {
-    private readonly ITrainingSetService _exerciseService;
+    private readonly IExerciseService _exerciseService;
 
-    public ExercisesController(ITrainingSetService exerciseService)
+    public ExercisesController(IExerciseService exerciseService)
     {
         _exerciseService = exerciseService;
     }

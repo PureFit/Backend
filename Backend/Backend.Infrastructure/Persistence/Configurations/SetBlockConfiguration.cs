@@ -11,7 +11,8 @@ public class SetBlockConfiguration : IEntityTypeConfiguration<SetBlock>
         builder.HasKey(sb => sb.Id);
 
         builder.Property(sb => sb.SetsCount).IsRequired();
-        builder.Property(sb => sb.RestTimeAfterBlockDoneSeconds).IsRequired();
+        builder.Property(sb => sb.RestBetweenSetsSeconds).IsRequired();
+        builder.Property(sb => sb.RestAfterBlockSeconds).IsRequired();
 
         builder.HasMany(sb => sb.ExerciseEntries)
                .WithOne(e => e.SetBlock)

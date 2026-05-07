@@ -38,14 +38,6 @@ public enum MeasureType
     DistanceMeters
 }
 
-public enum ProgressionType
-{
-    Standard,
-    Pyramid,
-    Ladder,
-    DropSet
-}
-
 public enum WorkloadStatCategory
 {
     Muscle,
@@ -57,6 +49,27 @@ public enum SessionStatus
     InProgress,
     Completed,
     Abandoned
+}
+
+public enum TrainingType
+{
+    FullBody,
+    Push,
+    Pull,
+    Strength,
+    Hypertrophy,
+    Cardio,
+    Mobility
+}
+
+public enum BodyPartFocus
+{
+    Chest,
+    Back,
+    Legs,
+    Shoulders,
+    Arms,
+    Core
 }
 
 // RPE (Rate of Perceived Exertion) — субъективная оценка нагрузки от пользователя.

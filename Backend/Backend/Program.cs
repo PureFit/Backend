@@ -12,6 +12,7 @@ using Backend.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,14 +30,20 @@ builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+dataSourceBuilder.EnableDynamicJson();
+var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(dataSource));
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
 builder.Services.Configure<SvgSettings>(builder.Configuration.GetSection("SvgSettings"));
 builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("RedisConfig"));
+builder.Services.Configure<MuscleCalculatorConfig>(builder.Configuration.GetSection("MuscleCalculatorConfig"));
+builder.Services.Configure<ExerciseParameterConfig>(builder.Configuration.GetSection("ExerciseParameterConfig"));
 
 var redisConnectionString = builder.Configuration["RedisConfig:ConnectionString"]!;
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -77,12 +84,16 @@ builder.Services.AddScoped<IGoogleOAuthService, GoogleOAuthService>();
 builder.Services.AddHttpClient<GoogleOAuthService>();
 
 builder.Services.Configure<ExerciseApiSettings>(builder.Configuration.GetSection("ExerciseApi"));
-builder.Services.AddScoped<ITrainingSetService, ExerciseService>();
+builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddScoped<IExternalExerciseRepository, ExerciseApiClient>();
 builder.Services.AddHttpClient<ExerciseApiClient>();
 
 builder.Services.AddScoped<ISvgManipulationService, SvgManipulationService>();
 builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationService>();
+
+builder.Services.AddScoped<ITrainingSetRepository, TrainingSetRepository>();
+builder.Services.AddScoped<ITrainingSetService, TrainingSetService>();
+builder.Services.AddScoped<IMuscleCalculatorService, MuscleCalculatorService>();
 
 var app = builder.Build();
 
