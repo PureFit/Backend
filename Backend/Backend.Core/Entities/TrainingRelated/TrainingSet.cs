@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Backend.Core.Enums;
 
 namespace Backend.Core.Entities.TrainingRelated
@@ -11,10 +12,20 @@ namespace Backend.Core.Entities.TrainingRelated
         public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public Guid CreatedByUserId { get; set; }
-        public User CreatedBy { get; set; } = null!;
+        public Guid? CreatedByUserId { get; set; }
+        public User? CreatedBy { get; set; }
 
         public SetAccessType SetAccessType { get; set; }
+        public TrainingType? TrainingType { get; set; }
+        public BodyPartFocus? BodyPartFocus { get; set; }
+
+        // Денормализованные проценты для быстрой фильтрации/сортировки.
+        // Пересчитываются при добавлении/удалении упражнений и изменении SetsCount блока.
+        [Column(TypeName = "jsonb")]
+        public Dictionary<string, float>? MusclePercentages { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public Dictionary<string, float>? BodyPartPercentages { get; set; }
 
         public List<SetBlock> SetBlocks { get; set; } = [];
 

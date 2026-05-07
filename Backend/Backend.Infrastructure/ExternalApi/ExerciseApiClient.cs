@@ -128,6 +128,7 @@ public class ExerciseApiClient : IExternalExerciseRepository
         Instructions = src.Instructions,
         ExerciseTips = src.ExerciseTips,
         Variations = src.Variations,
-        Keywords = src.Keywords
+        Keywords = src.Keywords,
+        RelatedExerciseIds = src.RelatedExerciseIds
     };
 }

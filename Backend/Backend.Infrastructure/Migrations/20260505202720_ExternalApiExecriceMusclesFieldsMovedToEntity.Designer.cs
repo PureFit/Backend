@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505202720_ExternalApiExecriceMusclesFieldsMovedToEntity")]
+    partial class ExternalApiExecriceMusclesFieldsMovedToEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -278,10 +281,7 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RestAfterBlockSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RestBetweenSetsSeconds")
+                    b.Property<int>("RestTimeAfterBlockDoneSeconds")
                         .HasColumnType("integer");
 
                     b.Property<int>("SetsCount")
@@ -351,7 +351,7 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("CreatedByUserId")
+                    b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -729,7 +729,8 @@ namespace Backend.Infrastructure.Migrations
                     b.HasOne("Backend.Core.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Backend.Core.Entities.TrainingRelated.PlanTraining", "PlanTraining")
                         .WithOne("TrainingSet")

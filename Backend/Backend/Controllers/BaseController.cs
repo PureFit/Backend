@@ -19,6 +19,8 @@ public abstract class BaseController : ControllerBase
         {
             nameof(ErrorEnums.UnknownError) => StatusCode(500, result),
             nameof(ErrorEnums.UserNotFound) => NotFound(result),
+            nameof(ErrorEnums.NotFound) => NotFound(result),
+            nameof(ErrorEnums.Forbidden) => StatusCode(403, result),
             _ => StatusCode(500, result)
         };
     }

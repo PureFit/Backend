@@ -18,4 +18,5 @@ public class ExerciseDetailsDto
     public List<string> ExerciseTips { get; set; } = new();
     public List<string> Variations { get; set; } = new();
     public List<string> Keywords { get; set; } = new();
+    public List<string> RelatedExerciseIds { get; set; } = new();
 }

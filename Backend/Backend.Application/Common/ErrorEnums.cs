@@ -22,5 +22,7 @@ public enum ErrorEnums
     CalendarNotConnected,
 
     // General
-    UnknownError
+    UnknownError,
+    NotFound,
+    Forbidden
 }

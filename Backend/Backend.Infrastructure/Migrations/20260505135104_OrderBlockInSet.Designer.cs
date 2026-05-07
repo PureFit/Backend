@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505135104_OrderBlockInSet")]
+    partial class OrderBlockInSet
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,10 +116,6 @@ namespace Backend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<List<string>>("BodyParts")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("integer");
 
@@ -135,22 +134,18 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<Dictionary<string, float>>("Parameters")
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("ProgressionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int?>("Reps")
                         .HasColumnType("integer");
 
                     b.Property<int>("RestAfterCurrentEntrySeconds")
                         .HasColumnType("integer");
 
-                    b.Property<List<string>>("SecondaryMuscles")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<Guid>("SetBlockId")
                         .HasColumnType("uuid");
-
-                    b.Property<List<string>>("TargetMuscles")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
 
                     b.HasKey("Id");
 
@@ -278,10 +273,7 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RestAfterBlockSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RestBetweenSetsSeconds")
+                    b.Property<int>("RestTimeAfterBlockDoneSeconds")
                         .HasColumnType("integer");
 
                     b.Property<int>("SetsCount")
@@ -342,16 +334,10 @@ namespace Backend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("BodyPartFocus")
-                        .HasColumnType("text");
-
-                    b.Property<Dictionary<string, float>>("BodyPartPercentages")
-                        .HasColumnType("jsonb");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("CreatedByUserId")
+                    b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -360,9 +346,6 @@ namespace Backend.Infrastructure.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
-
-                    b.Property<Dictionary<string, float>>("MusclePercentages")
-                        .HasColumnType("jsonb");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -374,9 +357,6 @@ namespace Backend.Infrastructure.Migrations
 
                     b.Property<string>("SetAccessType")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TrainingType")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -729,7 +709,8 @@ namespace Backend.Infrastructure.Migrations
                     b.HasOne("Backend.Core.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Backend.Core.Entities.TrainingRelated.PlanTraining", "PlanTraining")
                         .WithOne("TrainingSet")

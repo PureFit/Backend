@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505212234_AddExerciseLookups")]
+    partial class AddExerciseLookups
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,6 +25,144 @@ namespace Backend.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Backend.Core.Entities.BodyPart", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("BodyParts");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.Equipment", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("Equipments");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.Exercise", b =>
+                {
+                    b.Property<string>("ExerciseId")
+                        .HasColumnType("text");
+
+                    b.Property<List<string>>("BodyParts")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CachedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<List<string>>("Equipments")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("ExerciseTips")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ExerciseType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl1080p")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl360p")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl480p")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl720p")
+                        .HasColumnType("text");
+
+                    b.Property<List<string>>("Instructions")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Overview")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<List<string>>("RelatedExerciseIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("SecondaryMuscles")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("TargetMuscles")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("Variations")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("ExerciseId");
+
+                    b.ToTable("Exercises");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseType", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("ExerciseTypes");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.Muscle", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("Muscles");
+                });
 
             modelBuilder.Entity("Backend.Core.Entities.RefreshToken", b =>
                 {
@@ -278,10 +419,7 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RestAfterBlockSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RestBetweenSetsSeconds")
+                    b.Property<int>("RestTimeAfterBlockDoneSeconds")
                         .HasColumnType("integer");
 
                     b.Property<int>("SetsCount")
@@ -351,7 +489,7 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("CreatedByUserId")
+                    b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -729,7 +867,8 @@ namespace Backend.Infrastructure.Migrations
                     b.HasOne("Backend.Core.Entities.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Backend.Core.Entities.TrainingRelated.PlanTraining", "PlanTraining")
                         .WithOne("TrainingSet")
