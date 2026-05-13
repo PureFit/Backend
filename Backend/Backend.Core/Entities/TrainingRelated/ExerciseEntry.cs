@@ -1,4 +1,3 @@
-using Backend.Core.Enums;
 using Backend.Core.Entities.ExerciseRelated;
 
 namespace Backend.Core.Entities.TrainingRelated
@@ -15,7 +14,6 @@ namespace Backend.Core.Entities.TrainingRelated
         public Guid ExerciseTypeId { get; set; }
         public ExerciseType ExerciseType { get; set; } = null!;
 
-        public MeasureType MeasureType { get; set; }
         public int? Reps { get; set; }
         public int? DurationSeconds { get; set; }
         public float? DistanceMeters { get; set; }

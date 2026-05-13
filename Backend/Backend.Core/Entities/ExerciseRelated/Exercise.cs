@@ -1,4 +1,3 @@
-using Backend.Core.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Core.Entities.ExerciseRelated;
@@ -7,6 +6,7 @@ public class Exercise
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
+    public string? ImageUrl { get; set; }
     public string? GifUrl { get; set; }
     public string? Overview { get; set; }
 
@@ -22,7 +22,7 @@ public class Exercise
     [Column(TypeName = "jsonb")]
     public List<string> Keywords { get; set; } = [];
 
-    public ExerciseCategory Category { get; set; }
+    public string Category { get; set; } = null!;
 
     // Для AllowsWeight упражнений: норма веса относительно веса тела юзера.
     // Жим лёжа = 0.7 (70% веса тела — средний рабочий вес).
@@ -35,4 +35,7 @@ public class Exercise
     public List<ExerciseMuscle> ExerciseMuscles { get; set; } = [];
     public List<ExerciseEquipment> ExerciseEquipments { get; set; } = [];
     public List<ExerciseBodyPart> ExerciseBodyParts { get; set; } = [];
+
+    [Column(TypeName = "jsonb")]
+    public List<string> RelatedExerciseIds { get; set; } = [];
 }

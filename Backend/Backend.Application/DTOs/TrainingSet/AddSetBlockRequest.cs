@@ -4,6 +4,7 @@ public class AddSetBlockRequest
 {
     public Guid SetId { get; set; }
     public Guid UserId { get; set; } // set from JWT claims in controller
+    public string? Name { get; set; }
     public int SetsCount { get; set; } = 1;
     public int RestBetweenSetsSeconds { get; set; }
     public int RestAfterBlockSeconds { get; set; }

@@ -13,12 +13,11 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
         builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
         builder.Property(e => e.GifUrl).HasMaxLength(500);
         builder.Property(e => e.Overview).HasMaxLength(2000);
-        builder.Property(e => e.Category).IsRequired().HasConversion<string>();
+        builder.Property(e => e.Category).IsRequired().HasMaxLength(100);
         builder.Property(e => e.Instructions).HasColumnType("jsonb");
         builder.Property(e => e.Tips).HasColumnType("jsonb");
         builder.Property(e => e.Variations).HasColumnType("jsonb");
         builder.Property(e => e.Keywords).HasColumnType("jsonb");
-
         builder.HasMany(e => e.ExerciseTypes)
                .WithOne(t => t.Exercise)
                .HasForeignKey(t => t.ExerciseId)

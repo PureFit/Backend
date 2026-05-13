@@ -2,21 +2,22 @@ namespace Backend.Application.DTOs.Excercises;
 
 public class ExerciseDetailsDto
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
     public string Name { get; set; } = null!;
-    public string ImageUrl { get; set; } = null!;
-    public string? ImageUrl480p { get; set; }
-    public string? ImageUrl720p { get; set; }
-    public string? VideoUrl { get; set; }
-    public string Overview { get; set; } = null!;
-    public List<string> BodyParts { get; set; } = new();
-    public List<string> TargetMuscles { get; set; } = new();
-    public List<string> SecondaryMuscles { get; set; } = new();
-    public List<string> Equipments { get; set; } = new();
-    public string ExerciseType { get; set; } = null!;
-    public List<string> Instructions { get; set; } = new();
-    public List<string> ExerciseTips { get; set; } = new();
-    public List<string> Variations { get; set; } = new();
-    public List<string> Keywords { get; set; } = new();
-    public List<string> RelatedExerciseIds { get; set; } = new();
+    public string? ImageUrl { get; set; }
+    public string? GifUrl { get; set; }
+    public string? Overview { get; set; }
+    public string Category { get; set; } = null!;
+    public bool AllowsWeight { get; set; }
+    public float? BaseWeightBodyRatio { get; set; }
+    public List<string> BodyParts { get; set; } = [];
+    public List<string> PrimaryMuscles { get; set; } = [];
+    public List<string> SecondaryMuscles { get; set; } = [];
+    public List<string> Equipments { get; set; } = [];
+    public List<ExerciseTypeDto> ExerciseTypes { get; set; } = [];
+    public List<string> Instructions { get; set; } = [];
+    public List<string> Tips { get; set; } = [];
+    public List<string> Variations { get; set; } = [];
+    public List<string> Keywords { get; set; } = [];
+    public List<ExerciseDto> RelatedExercises { get; set; } = [];
 }

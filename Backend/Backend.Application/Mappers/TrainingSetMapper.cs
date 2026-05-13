@@ -16,14 +16,13 @@ public static class TrainingSetMapper
         TrainingType = set.TrainingType?.ToString(),
         BodyPartFocus = set.BodyPartFocus?.ToString(),
         CreatedByUserId = set.CreatedByUserId,
-        MusclePercentages = set.MusclePercentages,
-        BodyPartPercentages = set.BodyPartPercentages,
         SetBlocks = set.SetBlocks.Select(b => b.ToDto()).ToList()
     };
 
     public static SetBlockResponse ToDto(this SetBlock block) => new()
     {
         Id = block.Id,
+        Name = block.Name,
         Order = block.Order,
         SetsCount = block.SetsCount,
         RestBetweenSetsSeconds = block.RestBetweenSetsSeconds,
@@ -35,22 +34,23 @@ public static class TrainingSetMapper
     {
         Id = entry.Id,
         ExerciseId = entry.ExerciseId,
+        ExerciseTypeId = entry.ExerciseTypeId,
         Order = entry.Order,
-        MeasureType = entry.MeasureType.ToString(),
-        TargetMuscles = entry.TargetMuscles,
-        SecondaryMuscles = entry.SecondaryMuscles,
-        BodyParts = entry.BodyParts,
         Reps = entry.Reps,
         DurationSeconds = entry.DurationSeconds,
-        Parameters = entry.Parameters,
+        DistanceMeters = entry.DistanceMeters,
+        WeightKg = entry.WeightKg,
+        SpeedKmh = entry.SpeedKmh,
         RestAfterCurrentEntrySeconds = entry.RestAfterCurrentEntrySeconds,
         Intervals = entry.Intervals.Select(i => new ExerciseIntervalResponse
         {
             Id = i.Id,
             Order = i.Order,
-            DurationSeconds = i.DurationSeconds,
             Reps = i.Reps,
-            Parameters = i.Parameters
+            DurationSeconds = i.DurationSeconds,
+            DistanceMeters = i.DistanceMeters,
+            WeightKg = i.WeightKg,
+            SpeedKmh = i.SpeedKmh
         }).ToList()
     };
 }

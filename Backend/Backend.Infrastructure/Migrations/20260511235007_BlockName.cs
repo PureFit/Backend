@@ -5,24 +5,23 @@
 namespace Backend.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class OrderBlockInSet : Migration
+    public partial class BlockName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "Order",
+            migrationBuilder.AddColumn<string>(
+                name: "Name",
                 table: "SetBlocks",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+                type: "text",
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Order",
+                name: "Name",
                 table: "SetBlocks");
         }
     }

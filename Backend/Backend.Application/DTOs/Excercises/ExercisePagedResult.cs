@@ -2,8 +2,8 @@ namespace Backend.Application.DTOs.Excercises;
 
 public class ExercisePagedResult
 {
-    public List<ExerciseDto> Items { get; set; } = new();
-    public bool HasNextPage { get; set; }
-    public string? NextCursor { get; set; }
-    public int Total { get; set; }
+    public List<ExerciseDto> Items { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
 }

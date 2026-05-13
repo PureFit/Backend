@@ -24,5 +24,6 @@ public enum ErrorEnums
     // General
     UnknownError,
     NotFound,
-    Forbidden
+    Forbidden,
+    ValidationError
 }

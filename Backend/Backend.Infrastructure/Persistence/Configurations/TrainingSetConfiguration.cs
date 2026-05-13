@@ -16,9 +16,6 @@ public class TrainingSetConfiguration : IEntityTypeConfiguration<TrainingSet>
         builder.Property(ts => ts.SetAccessType).IsRequired().HasConversion<string>();
         builder.Property(ts => ts.TrainingType).HasConversion<string>();
         builder.Property(ts => ts.BodyPartFocus).HasConversion<string>();
-        builder.Property(ts => ts.MusclePercentages).HasColumnType("jsonb");
-        builder.Property(ts => ts.BodyPartPercentages).HasColumnType("jsonb");
-
         builder.HasOne(ts => ts.CreatedBy)
                .WithMany()
                .HasForeignKey(ts => ts.CreatedByUserId)

@@ -1,15 +1,5 @@
 namespace Backend.Core.Enums;
 
-public enum ExerciseCategory
-{
-    Strength,
-    Cardio,
-    BodyWeight,
-    Olympic,
-    Stretching,
-    Other
-}
-
 public enum MuscleRole
 {
     Primary,

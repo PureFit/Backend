@@ -10,7 +10,11 @@ public class ExerciseEntryConfiguration : IEntityTypeConfiguration<ExerciseEntry
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.MeasureType).IsRequired().HasConversion<string>();
+        builder.Property(e => e.Reps).IsRequired(false);
+        builder.Property(e => e.DurationSeconds).IsRequired(false);
+        builder.Property(e => e.DistanceMeters).IsRequired(false);
+        builder.Property(e => e.WeightKg).IsRequired(false);
+        builder.Property(e => e.SpeedKmh).IsRequired(false);
 
         builder.HasOne(e => e.Exercise)
                .WithMany()
