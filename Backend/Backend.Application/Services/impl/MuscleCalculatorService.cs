@@ -1,8 +1,11 @@
 using Backend.Application.Common;
 using Backend.Application.Repositories;
 using Backend.Core.Entities.TrainingRelated;
+using Backend.Core.Entities.ExerciseRelated;
+using Backend.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Net.WebSockets;
 
 namespace Backend.Application.Services.impl;
 
@@ -11,7 +14,6 @@ public class MuscleCalculatorService : IMuscleCalculatorService
     private readonly ITrainingSetRepository _repo;
     private readonly MuscleCalculatorConfig _muscleCalculatorConfig;
     private readonly ExerciseParameterConfig _paramConfig;
-    private readonly IReadOnlyDictionary<string, ParameterEntry> _paramLookup;
     private readonly ILogger<MuscleCalculatorService> _logger;
 
     public MuscleCalculatorService(
@@ -23,206 +25,148 @@ public class MuscleCalculatorService : IMuscleCalculatorService
         _repo = repo;
         _muscleCalculatorConfig = muscleCalculatorConfig.Value;
         _paramConfig = paramConfig.Value;
-        _paramLookup = _paramConfig.Parameters
-            .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
         _logger = logger;
     }
 
-    public async Task<BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>> CalculateForSetAsync(Guid setId)
+    private static float SecondsToKilometers(int seconds, float speedKmh) =>
+        seconds / 3600f * speedKmh;
+
+    private static float SecondsToReps(int seconds, int repsPerMinute) =>
+        (float)seconds * repsPerMinute / 60f;
+
+    private static float ApplyDifficulty(float value, float coefficient) =>
+        value * coefficient;
+
+    private static float NormalizeToRepScale(float value, float repCoefficient) =>
+        value * repCoefficient;
+
+    private static float NormalizeToDistanceScale(float value, float distanceCoefficient) =>
+        value * distanceCoefficient;
+
+    private static float GetWeightComponent(Exercise exercise, float? weightKg, float userWeightKg)
+    {
+        if (!exercise.AllowsWeight || !weightKg.HasValue) return 1f;
+
+        if (exercise.BaseWeightBodyRatio.HasValue)
+        {
+            var baseWeight = userWeightKg * exercise.BaseWeightBodyRatio.Value;
+            return MathF.Log(weightKg.Value / baseWeight + 1f);
+        }
+
+        return MathF.Log(weightKg.Value + 1f);
+    }
+
+    private static float GetSpeedModifier(ExerciseType type, float actualSpeedKmh) =>
+        type.ReferenceSpeedKmh.HasValue ? actualSpeedKmh / type.ReferenceSpeedKmh.Value : 1f;
+
+
+    public async Task<BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>> CalculateForSetAsync(Guid setId, float userWeightKg)
     {
         var set = await _repo.GetByIdAsync(setId);
 
         if (set is null)
         {
-            _logger.LogWarning("TrainingSet with Id {SetId} not found for muscle calculation", setId);
-            return BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>.Fail("");
+            _logger.LogWarning("Muscle calculation failed: Training set with ID {SetId} not found.", setId);
+            return BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>.Fail(ErrorEnums.NotFound);
         }
 
-        _logger.LogInformation("Calculating muscle and body part percentages for TrainingSet with Id {SetId}", setId);
+        var musclePercentages = new Dictionary<string, float>();
+        var bodyPartPercentages = new Dictionary<string, float>();
 
-        var accumResultsMusclesValues = new Dictionary<string, float>();
-        var accumResultsBodyPartsValues = new Dictionary<string, float>();
+        var exercises = set.SetBlocks.SelectMany(sb => sb.ExerciseEntries);
 
-        var entries = set.SetBlocks.SelectMany(sb => sb.ExerciseEntries);
-
-        foreach (var entry in entries)
+        foreach (var entry in exercises)
         {
-            var volume = CalculateVolume(entry);
+            var volume = CalculateVolume(entry, userWeightKg);
 
-            foreach (var muscle in entry.TargetMuscles)
+            foreach (var em in entry.Exercise.ExerciseMuscles)
             {
-                if (!accumResultsMusclesValues.ContainsKey(muscle))
-                    accumResultsMusclesValues[muscle] = 0;
-                accumResultsMusclesValues[muscle] += volume;
+                var effectiveVolume = em.Role == MuscleRole.Primary
+                    ? volume
+                    : volume * _muscleCalculatorConfig.SecondaryCoefficient;
+
+                musclePercentages[em.Muscle.Name] = musclePercentages.GetValueOrDefault(em.Muscle.Name) + effectiveVolume;
             }
 
-            foreach (var muscle in entry.SecondaryMuscles)
-            {
-                if (!accumResultsMusclesValues.ContainsKey(muscle))
-                    accumResultsMusclesValues[muscle] = 0;
-                accumResultsMusclesValues[muscle] += volume * _muscleCalculatorConfig.SecondaryCoefficient;
-            }
+            foreach (var eb in entry.Exercise.ExerciseBodyParts)
+                bodyPartPercentages[eb.BodyPart.Name] = bodyPartPercentages.GetValueOrDefault(eb.BodyPart.Name) + volume;
         }
 
-        var musclePercentages = CalculatePercentagesFromValues(accumResultsMusclesValues);
-        var bodyPartPercentages = CalculatePercentagesFromValues(accumResultsBodyPartsValues);
+        var muscleTotal    = musclePercentages.Values.Sum();
+        var bodyPartTotal  = bodyPartPercentages.Values.Sum();
 
-        return BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>.Ok((musclePercentages, bodyPartPercentages));
+        var muscleResult   = musclePercentages.ToDictionary(x => x.Key, x => muscleTotal > 0 ? x.Value / muscleTotal : 0f);
+        var bodyPartResult = bodyPartPercentages.ToDictionary(x => x.Key, x => bodyPartTotal > 0 ? x.Value / bodyPartTotal : 0f);
+
+        return BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>.Ok((muscleResult, bodyPartResult));
     }
 
-    private Dictionary<string, float> CalculatePercentagesFromValues(Dictionary<string, float> accumResultsValues)
+    private float CalculateVolume(ExerciseEntry entry, float userWeightKg)
     {
-        var totalVolume = accumResultsValues.Values.Sum();
-        var muscleCount = accumResultsValues.Count(x => x.Value > 0);
+        float baseVolume = entry.Intervals.Count > 0
+            ? entry.Intervals.Sum(i => CalculateSingleVolume(entry.ExerciseType, entry.Exercise, i.Reps, i.DurationSeconds, i.DistanceMeters, i.WeightKg, i.SpeedKmh, userWeightKg))
+            : CalculateSingleVolume(entry.ExerciseType, entry.Exercise, entry.Reps, entry.DurationSeconds, entry.DistanceMeters, entry.WeightKg, entry.SpeedKmh, userWeightKg);
 
-        return accumResultsValues.ToDictionary(x => x.Key, x => muscleCount > 0 ? x.Value / totalVolume : 0);
-    }
-
-    private float CalculateVolume(ExerciseEntry entry)
-    {
-        if (entry.Intervals.Count > 0)
-        {
-            return entry.Intervals.Sum(GetVolumeInterval);
-        }
-
-        if (entry.Reps.HasValue && entry.DurationSeconds.HasValue)
-        {
-            _logger.LogWarning("ExerciseEntry with Id {EntryId} has both Reps and Duration specified without intervals. This is not supported for volume calculation.", entry.Id);
-        }
-
-        float baseVolume;
-
-        if (entry.Reps.HasValue)
-        {
-            baseVolume = GetVolumeReps(entry);
-        }
-        else if (entry.DurationSeconds.HasValue)
-        {
-            baseVolume = GetVolumeDuration(entry);
-        }
-        else if (entry.DistanceMeters.HasValue)
-        {
-            baseVolume = entry.DistanceMeters.Value;
-        }
-        else
-        {
-            _logger.LogWarning("ExerciseEntry with Id {EntryId} has no measurable data for volume calculation", entry.Id);
-            return 0f;
-        }
-
-        return ConsiderSets(entry, baseVolume);
-    }
-
-    private float GetVolumeReps(ExerciseEntry entry)
-    {
-        float repMultiplier = 1f;
-        float additiveModifier = 1f;
-
-        if (entry.Parameters != null)
-        {
-            foreach (var (key, value) in entry.Parameters)
-            {
-                if (!_paramLookup.TryGetValue(key, out var meta))
-                    continue;
-
-                switch (meta.Role)
-                {
-                    case ParameterRole.RepMultiplier:
-                        repMultiplier = value;
-                        break;
-                    case ParameterRole.AdditiveModifier:
-                        additiveModifier *= (1f + value * meta.Factor);
-                        break;
-                }
-            }
-        }
-
-        return entry.Reps!.Value * repMultiplier * additiveModifier;
-    }
-
-    private float GetVolumeDuration(ExerciseEntry entry)
-    {
-        float durationLoad = 0f;
-        float additiveModifier = 1f;
-        bool hasDurationIntensity = false;
-
-        if (entry.Parameters != null)
-        {
-            foreach (var (key, value) in entry.Parameters)
-            {
-                if (!_paramLookup.TryGetValue(key, out var meta))
-                    continue;
-
-                switch (meta.Role)
-                {
-                    case ParameterRole.DurationIntensity:
-                        durationLoad += value * meta.Factor;
-                        hasDurationIntensity = true;
-                        break;
-                    case ParameterRole.AdditiveModifier:
-                        additiveModifier *= (1f + value * meta.Factor);
-                        break;
-                }
-            }
-        }
-
-        float baseVolume = hasDurationIntensity
-            ? entry.DurationSeconds!.Value * durationLoad
-            : entry.DurationSeconds!.Value / _paramConfig.SecondsPerRepEquivalent;
-
-        return baseVolume * additiveModifier;
-    }
-
-    private float GetVolumeInterval(ExerciseInterval interval)
-    {
-        float repMultiplier = 1f;
-        float speedKmh = 0f;
-        float additiveModifier = 1f;
-        bool hasDurationIntensity = false;
-
-        if (interval.Parameters != null)
-        {
-            foreach (var (key, value) in interval.Parameters)
-            {
-                if (!_paramLookup.TryGetValue(key, out var meta))
-                    continue;
-
-                switch (meta.Role)
-                {
-                    case ParameterRole.RepMultiplier:
-                        repMultiplier = value;
-                        break;
-                    case ParameterRole.SpeedKmh:
-                        speedKmh += value;
-                        hasDurationIntensity = true;
-                        break;
-                    case ParameterRole.AdditiveModifier:
-                        additiveModifier *= (1f + value * meta.Factor);
-                        break;
-                }
-            }
-        }
-
-        float baseVolume;
-
-        if (interval.Reps.HasValue)
-        {
-            baseVolume = interval.Reps.Value * repMultiplier;
-        }
-        else if (hasDurationIntensity)
-        {
-            baseVolume = interval.DurationSeconds * durationLoad;
-        }
-        else
-        {
-            baseVolume = interval.DurationSeconds / _paramConfig.SecondsPerRepEquivalent;
-        }
-
-        return baseVolume * additiveModifier;
-    }
-
-    private float ConsiderSets(ExerciseEntry entry, float baseVolume)
-    {
         return baseVolume * entry.SetBlock.SetsCount;
+    }
+
+    private float CalculateSingleVolume(ExerciseType type, Exercise exercise, int? reps, int? durationSeconds, float? distanceMeters, float? weightKg, float? speedKmh, float userWeightKg)
+    {
+        return type.MeasureCategory switch
+        {
+            MeasureCategory.RepsBased  => GetVolumeReps(type, exercise, reps, weightKg, userWeightKg),
+            MeasureCategory.DistanceBased => GetVolumeDistance(type, distanceMeters, durationSeconds, speedKmh),
+            MeasureCategory.DurationOnly  => GetVolumeDuration(type, exercise, durationSeconds, weightKg, userWeightKg),
+            _ => 0f
+        };
+    }
+
+    private float GetVolumeDuration(ExerciseType type, Exercise exercise, int? durationSeconds, float? weightKg, float userWeightKg)
+    {
+        if (!durationSeconds.HasValue)
+            return 0f;
+
+        if (type.ReferenceSpeedKmh.HasValue)
+        {
+            var distance         = SecondsToKilometers(durationSeconds.Value, type.ReferenceSpeedKmh.Value);
+            var effectiveDistance = ApplyDifficulty(distance, type.Coefficient);
+            var normalizedVolume  = NormalizeToDistanceScale(effectiveDistance, _paramConfig.DistanceCoefficient);
+            return normalizedVolume;
+        }
+
+        if (type.AverageRepsPerMinute.HasValue)
+        {
+            var estimatedReps    = SecondsToReps(durationSeconds.Value, type.AverageRepsPerMinute.Value);
+            var weightComponent  = GetWeightComponent(exercise, weightKg, userWeightKg);
+            var effectiveReps    = ApplyDifficulty(estimatedReps * weightComponent, type.Coefficient);
+            var normalizedVolume = NormalizeToRepScale(effectiveReps, _paramConfig.RepCoefficient);
+            return normalizedVolume;
+        }
+
+        return 0f;
+    }
+
+    private float GetVolumeDistance(ExerciseType type, float? distanceMeters, int? durationSeconds, float? speedKmh)
+    {
+        var knownParams = new[] { distanceMeters.HasValue, durationSeconds.HasValue, speedKmh.HasValue };
+        if (knownParams.Count(x => x) < 2)
+            return 0f;
+
+        float distance = distanceMeters ?? SecondsToKilometers(durationSeconds.Value, speedKmh.Value);
+        var speed = speedKmh ?? distanceMeters!.Value / 1000f / (durationSeconds!.Value / 3600f);
+
+        var speedModifier     = GetSpeedModifier(type, speed);
+        var effectiveDistance = ApplyDifficulty(distance * speedModifier, type.Coefficient);
+        return NormalizeToDistanceScale(effectiveDistance, _paramConfig.DistanceCoefficient);
+    }
+
+    private float GetVolumeReps(ExerciseType type, Exercise exercise, int? reps, float? weightKg, float userWeightKg)
+    {
+        if (!reps.HasValue) return 0f;
+
+        var weightComponent  = GetWeightComponent(exercise, weightKg, userWeightKg);
+        var effectiveReps    = ApplyDifficulty(reps.Value * weightComponent, type.Coefficient);
+        var normalizedVolume = NormalizeToRepScale(effectiveReps, _paramConfig.RepCoefficient);
+        return normalizedVolume;
     }
 }

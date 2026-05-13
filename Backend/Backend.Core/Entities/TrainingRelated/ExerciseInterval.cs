@@ -1,16 +1,14 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Backend.Core.Entities.TrainingRelated
 {
     public class ExerciseInterval
     {
         public Guid Id { get; set; }
         public int Order { get; set; }
-        public int DurationSeconds { get; set; }
         public int? Reps { get; set; }
-
-        [Column(TypeName = "jsonb")]
-        public Dictionary<string, float>? Parameters { get; set; } // speed_kmh, incline, watts, weight_kg и т.д.
+        public int? DurationSeconds { get; set; }
+        public float? DistanceMeters { get; set; }
+        public float? WeightKg { get; set; }
+        public float? SpeedKmh { get; set; }
 
         public Guid ExerciseEntryId { get; set; }
         public ExerciseEntry ExerciseEntry { get; set; } = null!;

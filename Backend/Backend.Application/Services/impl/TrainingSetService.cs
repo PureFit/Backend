@@ -11,17 +11,33 @@ namespace Backend.Application.Services.impl;
 public class TrainingSetService : ITrainingSetService
 {
     private readonly ITrainingSetRepository _repo;
+    private readonly IUserInfoRepository _userInfoRepository;
     private readonly IMuscleCalculatorService _muscleCalculator;
     private readonly ILogger<TrainingSetService> _logger;
 
     public TrainingSetService(
         ITrainingSetRepository repo,
+        IUserInfoRepository userInfoRepository,
         IMuscleCalculatorService muscleCalculator,
         ILogger<TrainingSetService> logger)
     {
         _repo = repo;
+        _userInfoRepository = userInfoRepository;
         _muscleCalculator = muscleCalculator;
         _logger = logger;
+    }
+
+    private async Task RecalculateMusclesAsync(TrainingSet set, Guid userId)
+    {
+        var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);
+        if (userInfo is null) return;
+
+        var result = await _muscleCalculator.CalculateForSetAsync(set.Id, (float)userInfo.WeightKg);
+        if (!result.Success) return;
+
+        set.MusclePercentages = result.Data.MusclePercentages;
+        set.BodyPartPercentages = result.Data.BodyPartPercentages;
+        await _repo.UpdateAsync(set);
     }
 
     public async Task<BaseResponse<TrainingSetResponse>> GetTrainingSetByIdAsync(Guid setId, Guid userId)
@@ -33,13 +49,13 @@ public class TrainingSetService : ITrainingSetService
             if (setDb is null)
             {
                 _logger.LogWarning("Training set {SetId} not found", setId);
-                return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.NotFound);
             }
 
             if (setDb.SetAccessType == SetAccessType.Private && setDb.CreatedByUserId != userId)
             {
                 _logger.LogWarning("User {UserId} attempted to access private training set {SetId}", userId, setId);
-                return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.Forbidden);
             }
 
             return BaseResponse<TrainingSetResponse>.Ok(setDb.ToDto());
@@ -47,7 +63,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "GetTrainingSetByIdAsync failed for SetId={SetId}", setId);
-            return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<TrainingSetResponse>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -68,7 +84,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "GetTrainingSetsByFilterAsync failed");
-            return BaseResponse<TrainingSetPagedResult>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<TrainingSetPagedResult>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -95,7 +111,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "CreateTrainingSet failed for UserId={UserId}", request.UserId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -105,9 +121,9 @@ public class TrainingSetService : ITrainingSetService
         {
             var set = await _repo.GetByIdAsync(request.SetId);
             if (set is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
             if (set.CreatedByUserId != userId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             if (request.Name is not null) set.Name = request.Name;
             if (request.Description is not null) set.Description = request.Description;
@@ -122,7 +138,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "UpdateTrainingSet failed for SetId={SetId}", request.SetId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -132,9 +148,9 @@ public class TrainingSetService : ITrainingSetService
         {
             var set = await _repo.GetByIdAsync(setId);
             if (set is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
             if (set.CreatedByUserId != userId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             await _repo.DeleteAsync(set);
             return BaseResponse<bool>.Ok(true);
@@ -142,7 +158,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "DeleteTrainingSet failed for SetId={SetId}", setId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -152,9 +168,9 @@ public class TrainingSetService : ITrainingSetService
         {
             var set = await _repo.GetByIdAsync(request.SetId);
             if (set is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
             if (set.CreatedByUserId != request.UserId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             var nextOrder = set.SetBlocks.Count > 0 ? set.SetBlocks.Max(b => b.Order) + 1 : 1;
 
@@ -173,7 +189,7 @@ public class TrainingSetService : ITrainingSetService
         catch (Exception ex)
         {
             _logger.LogError(ex, "AddSetBlock failed for SetId={SetId}", request.SetId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -183,11 +199,11 @@ public class TrainingSetService : ITrainingSetService
         {
             var block = await _repo.GetBlockByIdAsync(request.BlockId);
             if (block is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
 
             var set = await _repo.GetByIdAsync(block.TrainingSetId);
             if (set is null || set.CreatedByUserId != userId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             var setsCountChanged = request.SetsCount.HasValue && request.SetsCount.Value != block.SetsCount;
 
@@ -199,19 +215,14 @@ public class TrainingSetService : ITrainingSetService
             await _repo.UpdateBlockAsync(block);
 
             if (setsCountChanged)
-            {
-                var (muscles, bodyParts) = await _muscleCalculator.CalculateForSetAsync(set.Id);
-                set.MusclePercentages = muscles;
-                set.BodyPartPercentages = bodyParts;
-                await _repo.UpdateAsync(set);
-            }
+                await RecalculateMusclesAsync(set, userId);
 
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "UpdateSetBlock failed for BlockId={BlockId}", request.BlockId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -221,25 +232,21 @@ public class TrainingSetService : ITrainingSetService
         {
             var block = await _repo.GetBlockByIdAsync(blockId);
             if (block is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
 
             var set = await _repo.GetByIdAsync(block.TrainingSetId);
             if (set is null || set.CreatedByUserId != userId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             await _repo.DeleteBlockAsync(block);
-
-            var (muscles, bodyParts) = await _muscleCalculator.CalculateForSetAsync(set.Id);
-            set.MusclePercentages = muscles;
-            set.BodyPartPercentages = bodyParts;
-            await _repo.UpdateAsync(set);
+            await RecalculateMusclesAsync(set, userId);
 
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "DeleteSetBlock failed for BlockId={BlockId}", blockId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -249,11 +256,11 @@ public class TrainingSetService : ITrainingSetService
         {
             var block = await _repo.GetBlockByIdAsync(request.BlockId);
             if (block is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
 
             var set = await _repo.GetByIdAsync(block.TrainingSetId);
             if (set is null || set.CreatedByUserId != request.UserId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             var nextOrder = block.ExerciseEntries.Count > 0 ? block.ExerciseEntries.Max(e => e.Order) + 1 : 1;
 
@@ -262,28 +269,24 @@ public class TrainingSetService : ITrainingSetService
                 Id = Guid.NewGuid(),
                 SetBlockId = request.BlockId,
                 ExerciseId = request.ExerciseId,
+                ExerciseTypeId = request.ExerciseTypeId,
                 MeasureType = request.MeasureType,
-                TargetMuscles = request.TargetMuscles,
-                SecondaryMuscles = request.SecondaryMuscles,
-                BodyParts = request.BodyParts,
                 Reps = request.Reps,
                 DurationSeconds = request.DurationSeconds,
-                Parameters = request.Parameters,
+                DistanceMeters = request.DistanceMeters,
+                WeightKg = request.WeightKg,
+                SpeedKmh = request.SpeedKmh,
                 RestAfterCurrentEntrySeconds = request.RestAfterCurrentEntrySeconds,
                 Order = nextOrder
             });
 
-            var (muscles, bodyParts) = await _muscleCalculator.CalculateForSetAsync(set.Id);
-            set.MusclePercentages = muscles;
-            set.BodyPartPercentages = bodyParts;
-
-            await _repo.UpdateAsync(set);
+            await RecalculateMusclesAsync(set, request.UserId);
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "AddExerciseEntryToSetBlock failed for BlockId={BlockId}", request.BlockId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -295,7 +298,7 @@ public class TrainingSetService : ITrainingSetService
             if (entryDb is null)
             {
                 _logger.LogWarning("Exercise entry {EntryId} not found", request.EntryId);
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
             }
 
             var block = await _repo.GetBlockByIdAsync(entryDb.SetBlockId);
@@ -303,15 +306,20 @@ public class TrainingSetService : ITrainingSetService
             if (set is null || set.CreatedByUserId != userId)
             {
                 _logger.LogWarning("User {UserId} has no permission to modify entry {EntryId}", userId, request.EntryId);
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
             }
 
             var volumeChanged = (request.Reps.HasValue && request.Reps != entryDb.Reps) ||
-                                (request.DurationSeconds.HasValue && request.DurationSeconds != entryDb.DurationSeconds);
+                                (request.DurationSeconds.HasValue && request.DurationSeconds != entryDb.DurationSeconds) ||
+                                (request.DistanceMeters.HasValue && request.DistanceMeters != entryDb.DistanceMeters) ||
+                                (request.WeightKg.HasValue && request.WeightKg != entryDb.WeightKg) ||
+                                (request.SpeedKmh.HasValue && request.SpeedKmh != entryDb.SpeedKmh);
 
             if (request.Reps.HasValue) entryDb.Reps = request.Reps;
             if (request.DurationSeconds.HasValue) entryDb.DurationSeconds = request.DurationSeconds;
-            if (request.Parameters is not null) entryDb.Parameters = request.Parameters;
+            if (request.DistanceMeters.HasValue) entryDb.DistanceMeters = request.DistanceMeters;
+            if (request.WeightKg.HasValue) entryDb.WeightKg = request.WeightKg;
+            if (request.SpeedKmh.HasValue) entryDb.SpeedKmh = request.SpeedKmh;
             if (request.RestAfterCurrentEntrySeconds.HasValue) entryDb.RestAfterCurrentEntrySeconds = request.RestAfterCurrentEntrySeconds.Value;
             if (request.Order.HasValue) entryDb.Order = request.Order.Value;
             if (request.MeasureType.HasValue) entryDb.MeasureType = request.MeasureType.Value;
@@ -319,19 +327,14 @@ public class TrainingSetService : ITrainingSetService
             await _repo.UpdateEntryAsync(entryDb);
 
             if (volumeChanged)
-            {
-                var (muscles, bodyParts) = await _muscleCalculator.CalculateForSetAsync(set.Id);
-                set.MusclePercentages = muscles;
-                set.BodyPartPercentages = bodyParts;
-                await _repo.UpdateAsync(set);
-            }
+                await RecalculateMusclesAsync(set, userId);
 
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "UpdateSetBlockExerciseEntry failed for EntryId={EntryId}", request.EntryId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -341,25 +344,22 @@ public class TrainingSetService : ITrainingSetService
         {
             var entry = await _repo.GetEntryByIdAsync(entryId);
             if (entry is null)
-                return BaseResponse<bool>.Fail(ErrorEnums.NotFound.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
 
             var block = await _repo.GetBlockByIdAsync(entry.SetBlockId);
             var set = block is not null ? await _repo.GetByIdAsync(block.TrainingSetId) : null;
             if (set is null || set.CreatedByUserId != userId)
-                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
 
             await _repo.DeleteEntryAsync(entry);
+            await RecalculateMusclesAsync(set, userId);
 
-            var (muscles, bodyParts) = await _muscleCalculator.CalculateForSetAsync(set.Id);
-            set.MusclePercentages = muscles;
-            set.BodyPartPercentages = bodyParts;
-            await _repo.UpdateAsync(set);
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "DeleteExerciseEntry failed for EntryId={EntryId}", entryId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 }

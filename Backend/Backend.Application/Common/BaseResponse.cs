@@ -9,8 +9,8 @@ public class BaseResponse<T>
     public static BaseResponse<T> Ok(T data, string? message = null) =>
         new() { Success = true, Data = data, Message = message };
 
-    public static BaseResponse<T> Fail(string message) =>
-        new() { Success = false, Message = message };
+    public static BaseResponse<T> Fail(ErrorEnums error) =>
+        new() { Success = false, Message = error.ToString() };
 }
 
 public class BaseResponse
@@ -21,6 +21,6 @@ public class BaseResponse
     public static BaseResponse Ok(string? message = null) =>
         new() { Success = true, Message = message };
 
-    public static BaseResponse Fail(string message) =>
-        new() { Success = false, Message = message };
+    public static BaseResponse Fail(ErrorEnums error) =>
+        new() { Success = false, Message = error.ToString() };
 }

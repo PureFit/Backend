@@ -55,19 +55,19 @@ public class AuthService : IAuthService
             if (request.Password != request.PasswordConfirm)
             {
                 _logger.LogWarning("Password and confirmation do not match for user {Username}", request.Username);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.PasswordsMismatch.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.PasswordsMismatch);
             }
 
             if (await EmailExists(request.Email))
             {
                 _logger.LogWarning("Email {Email} already exists", request.Email);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.EmailExists.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.EmailExists);
             }
 
             if (await UsernameExists(request.Username))
             {
                 _logger.LogWarning("Username {Username} already exists", request.Username);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UsernameExists.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UsernameExists);
             }
 
             _logger.LogInformation("Registering new user {Username} with email {Email}. AssignedId: {UserId}", request.Username, request.Email, userId);
@@ -98,17 +98,17 @@ public class AuthService : IAuthService
         catch (ImageUploadException ex)
         {
             _logger.LogError(ex, "Failed to upload avatar image for user {Username} with email {Email}. UserId: {UserId}", request.Username, request.Email, userId);
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.ImageSaveError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.ImageSaveError);
         }
         catch (JwtCreateException ex)
         {
             _logger.LogError(ex, "Failed to generate JWT token for user {Username} with email {Email}. UserId: {UserId}", request.Username, request.Email, userId);
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred while registering user {Username} with email {Email}. UserId: {UserId}", request.Username, request.Email, userId);
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -121,19 +121,19 @@ public class AuthService : IAuthService
             if (user == null)
             {
                 _logger.LogWarning("Login attempt with non-existent email {Email}", request.Email);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidCredentials.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidCredentials);
             }
 
             if (user.AuthProvider != AuthProvider.Local || user.PasswordHash == null)
             {
                 _logger.LogWarning("Email/password login attempted for Google account {Email}", request.Email);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.WrongAuthProvider.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.WrongAuthProvider);
             }
 
             if (!request.Password.VerifyPassword(user.PasswordHash))
             {
                 _logger.LogWarning("Invalid password for user {Username}. UserId: {UserId}", user.Username, user.Id);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidCredentials.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidCredentials);
             }
 
             _logger.LogInformation("User {Username} logged in successfully. UserId: {UserId}", user.Username, user.Id);
@@ -146,12 +146,12 @@ public class AuthService : IAuthService
         catch (JwtCreateException ex)
         {
             _logger.LogError(ex, "Failed to generate JWT token on login for email {Email}", request.Email);
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during login for email {Email}", request.Email);
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -164,7 +164,7 @@ public class AuthService : IAuthService
             if (userId == null)
             {
                 _logger.LogWarning("Invalid or expired refresh token");
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidRefreshToken.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidRefreshToken);
             }
 
             var user = await _authRepository.GetByIdAsync(userId.Value);
@@ -172,7 +172,7 @@ public class AuthService : IAuthService
             if (user == null)
             {
                 _logger.LogWarning("User not found for refresh token. UserId: {UserId}", userId);
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UserNotFound.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UserNotFound);
             }
 
             _logger.LogInformation("Refreshing token for user {Username}. UserId: {UserId}", user.Username, user.Id);
@@ -184,17 +184,17 @@ public class AuthService : IAuthService
         catch (NotFoundInDbException ex)
         {
             _logger.LogError(ex, "Refresh token not found in database");
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidRefreshToken.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.InvalidRefreshToken);
         }
         catch (JwtCreateException ex)
         {
             _logger.LogError(ex, "Failed to generate token during refresh");
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.JwtGenerateError);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during token refresh");
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -204,7 +204,7 @@ public class AuthService : IAuthService
         {
             var googleUser = await _googleOAuthService.VerifyIdTokenAsync(idToken);
             if (googleUser == null)
-                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.GoogleAuthFailed.ToString());
+                return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.GoogleAuthFailed);
 
             var user = await _authRepository.GetByGoogleIdAsync(googleUser.GoogleId)
                        ?? await _authRepository.GetByEmailAsync(googleUser.Email);
@@ -243,7 +243,7 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during Google login");
-            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<AuthTokenDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -280,7 +280,7 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during logout");
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 }

@@ -10,12 +10,17 @@ public class ExerciseEntryConfiguration : IEntityTypeConfiguration<ExerciseEntry
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.ExerciseId).IsRequired().HasMaxLength(50);
         builder.Property(e => e.MeasureType).IsRequired().HasConversion<string>();
-        builder.Property(e => e.Parameters).HasColumnType("jsonb");
-        builder.Property(e => e.TargetMuscles).HasColumnType("jsonb");
-        builder.Property(e => e.SecondaryMuscles).HasColumnType("jsonb");
-        builder.Property(e => e.BodyParts).HasColumnType("jsonb");
+
+        builder.HasOne(e => e.Exercise)
+               .WithMany()
+               .HasForeignKey(e => e.ExerciseId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.ExerciseType)
+               .WithMany()
+               .HasForeignKey(e => e.ExerciseTypeId)
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(e => e.Intervals)
                .WithOne(i => i.ExerciseEntry)

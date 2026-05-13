@@ -45,7 +45,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get exercises");
-            return BaseResponse<ExercisePagedResult>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<ExercisePagedResult>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -61,7 +61,7 @@ public class ExerciseService : IExerciseService
 
             var result = await _repository.GetExerciseDetailsAsync(id);
             if (result == null)
-                return BaseResponse<ExerciseDetailsDto>.Fail("Exercise not found");
+                return BaseResponse<ExerciseDetailsDto>.Fail(ErrorEnums.NotFound);
 
             await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromHours(_redis.ExerciseDetailTtlHours));
             return BaseResponse<ExerciseDetailsDto>.Ok(result);
@@ -69,7 +69,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get exercise {Id}", id);
-            return BaseResponse<ExerciseDetailsDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<ExerciseDetailsDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -90,7 +90,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get muscles");
-            return BaseResponse<List<string>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<string>>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -111,7 +111,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get body parts");
-            return BaseResponse<List<BodyPartItemDto>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<BodyPartItemDto>>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -132,7 +132,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get equipments");
-            return BaseResponse<List<EquipmentItemDto>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<EquipmentItemDto>>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -153,7 +153,7 @@ public class ExerciseService : IExerciseService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get exercise types");
-            return BaseResponse<List<string>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<string>>.Fail(ErrorEnums.UnknownError);
         }
     }
 }
