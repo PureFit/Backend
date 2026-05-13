@@ -65,7 +65,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update weight for UserId: {UserId}", userId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -88,7 +88,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get weight history for UserId: {UserId}", userId);
-            return BaseResponse<List<WeightEntryDto>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<WeightEntryDto>>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -114,7 +114,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to complete profile for UserId: {UserId}", userId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -124,7 +124,7 @@ public class ProfileService : IProfileService
         {
             var tokenPair = await _googleOAuthService.ExchangeAuthCodeAsync(serverAuthCode);
             if (tokenPair == null)
-                return BaseResponse<bool>.Fail(ErrorEnums.GoogleAuthFailed.ToString());
+                return BaseResponse<bool>.Fail(ErrorEnums.GoogleAuthFailed);
 
             await _googleTokenRepository.UpsertAsync(new UserGoogleToken
             {
@@ -143,7 +143,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to connect Google Calendar for UserId: {UserId}", userId);
-            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -161,7 +161,7 @@ public class ProfileService : IProfileService
             {
                 var refreshed = await _googleOAuthService.RefreshAccessTokenAsync(tokenRecord.RefreshToken);
                 if (refreshed == null)
-                    return BaseResponse<List<GoogleCalendarEventDto>>.Fail(ErrorEnums.GoogleAuthFailed.ToString());
+                    return BaseResponse<List<GoogleCalendarEventDto>>.Fail(ErrorEnums.GoogleAuthFailed);
 
                 tokenRecord.AccessToken = refreshed.Value.AccessToken;
                 tokenRecord.AccessTokenExpiresAt = refreshed.Value.ExpiresAt;
@@ -174,7 +174,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get Google Calendar events for UserId: {UserId}", userId);
-            return BaseResponse<List<GoogleCalendarEventDto>>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<List<GoogleCalendarEventDto>>.Fail(ErrorEnums.UnknownError);
         }
     }
 
@@ -207,18 +207,18 @@ public class ProfileService : IProfileService
         {
             var user = await _authRepository.GetByIdAsync(userId);
             if (user == null)
-                return BaseResponse<ProfileDto>.Fail("User not found");
+                return BaseResponse<ProfileDto>.Fail(ErrorEnums.UserNotFound);
 
             var info = await _userInfoRepository.GetByUserIdAsync(userId);
             if (info == null)
-                return BaseResponse<ProfileDto>.Fail("Profile not found");
+                return BaseResponse<ProfileDto>.Fail(ErrorEnums.NotFound);
 
             return BaseResponse<ProfileDto>.Ok(new ProfileDto
             {
                 Username = user.Username,
                 AvatarUrl = user.AvatarUrl,
-                Sex = info.Sex.ToString(),
-                FitnessLevel = info.Level.ToString(),
+                Sex = info.Sex,
+                FitnessLevel = info.Level,
                 WeightKg = info.WeightKg,
                 HeightCm = (int)info.HeightCm,
                 DateOfBirth = info.DateOfBirth
@@ -227,7 +227,7 @@ public class ProfileService : IProfileService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get profile for UserId: {UserId}", userId);
-            return BaseResponse<ProfileDto>.Fail(ErrorEnums.UnknownError.ToString());
+            return BaseResponse<ProfileDto>.Fail(ErrorEnums.UnknownError);
         }
     }
 }

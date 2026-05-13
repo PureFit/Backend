@@ -2,23 +2,14 @@ namespace Backend.Application.Common;
 
 public class ExerciseParameterConfig
 {
-    public float SecondsPerRepEquivalent { get; set; } = 30f;
-    public float RepCoefficient { get; set; } = 1f;
-    public float MeterCoefficient { get; set; } = 0.03f;
-    public List<ParameterEntry> Parameters { get; set; } = [];
-}
+    // Базовый коэффициент за 1 реп (без веса).
+    // Масштабирует репы к общей системе единиц.
+    public float RepCoefficient { get; set; } = 1.0f;
 
-public class ParameterEntry
-{
-    public string Name { get; set; } = null!;
-    public ParameterRole Role { get; set; }
-    public float Factor { get; set; }
-}
+    // Базовый коэффициент за 1 метр дистанции.
+    // Настраивается чтобы 1км бега ≈ разумному кол-ву репов.
+    public float DistanceCoefficient { get; set; } = 0.03f;
 
-public enum ParameterRole
-{
-    RepMultiplier,
-    DurationIntensity,
-    AdditiveModifier,
-    SpeedKmh
+    // Базовый коэффициент за 1 секунду (для DurationOnly упражнений без движения).
+    public float DurationCoefficient { get; set; } = 0.033f;
 }

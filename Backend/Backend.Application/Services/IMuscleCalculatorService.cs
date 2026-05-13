@@ -4,5 +4,5 @@ namespace Backend.Application.Services;
 
 public interface IMuscleCalculatorService
 {
-    Task<BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>> CalculateForSetAsync(Guid setId);
+    Task<BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>> CalculateForSetAsync(Guid setId, float userWeightKg);
 }

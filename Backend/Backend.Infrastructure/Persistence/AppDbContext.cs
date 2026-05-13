@@ -1,4 +1,5 @@
 using Backend.Core.Entities;
+using Backend.Core.Entities.ExerciseRelated;
 using Backend.Core.Entities.TrainingRelated;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ExerciseInterval> ExerciseIntervals { get; set; }
     public DbSet<ExternalTraining> ExternalTrainings { get; set; }
     public DbSet<UserWorkloadStat> UserWorkloadStats { get; set; }
+
+    public DbSet<Exercise> Exercises { get; set; }
+    public DbSet<ExerciseType> ExerciseTypes { get; set; }
+    public DbSet<Muscle> Muscles { get; set; }
+    public DbSet<BodyPart> BodyParts { get; set; }
+    public DbSet<Equipment> Equipments { get; set; }
+    public DbSet<ExerciseMuscle> ExerciseMuscles { get; set; }
+    public DbSet<ExerciseEquipment> ExerciseEquipments { get; set; }
+    public DbSet<ExerciseBodyPart> ExerciseBodyParts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
