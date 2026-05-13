@@ -4,6 +4,7 @@ public class UpdateSetBlockRequest
 {
     public Guid SetId { get; set; }
     public Guid BlockId { get; set; }
+    public string? Name { get; set; }
     public int? SetsCount { get; set; }
     public int? RestBetweenSetsSeconds { get; set; }
     public int? RestAfterBlockSeconds { get; set; }

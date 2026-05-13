@@ -108,6 +108,14 @@ public class ProfileService : IProfileService
                 await _userInfoRepository.AddAsync(request.ToEntity(userId));
             }
 
+            var now = DateTime.UtcNow;
+            await _metricLogRepository.AddRangeAsync(new[]
+            {
+                new UserMetricLog { Id = Guid.NewGuid(), UserId = userId, Metric = MetricType.Weight,       Value = request.WeightKg.ToString("F1"),         LoggedAt = now },
+                new UserMetricLog { Id = Guid.NewGuid(), UserId = userId, Metric = MetricType.Height,       Value = request.HeightCm.ToString(),             LoggedAt = now },
+                new UserMetricLog { Id = Guid.NewGuid(), UserId = userId, Metric = MetricType.FitnessLevel, Value = request.FitnessLevel.ToString(),         LoggedAt = now }
+            });
+
             _logger.LogInformation("Profile completed for UserId: {UserId}", userId);
             return BaseResponse<bool>.Ok(true);
         }
@@ -217,8 +225,8 @@ public class ProfileService : IProfileService
             {
                 Username = user.Username,
                 AvatarUrl = user.AvatarUrl,
-                Sex = info.Sex,
-                FitnessLevel = info.Level,
+                Sex = info.Sex.ToString(),
+                FitnessLevel = info.Level.ToString(),
                 WeightKg = info.WeightKg,
                 HeightCm = (int)info.HeightCm,
                 DateOfBirth = info.DateOfBirth

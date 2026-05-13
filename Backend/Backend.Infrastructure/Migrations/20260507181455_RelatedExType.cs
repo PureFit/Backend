@@ -5,7 +5,7 @@
 namespace Backend.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIsActiveToGoogleToken : Migration
+    public partial class RelatedExType : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

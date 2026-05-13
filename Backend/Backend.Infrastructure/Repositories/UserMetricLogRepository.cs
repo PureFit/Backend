@@ -20,6 +20,12 @@ public class UserMetricLogRepository : IUserMetricLogRepository
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task AddRangeAsync(IEnumerable<UserMetricLog> logs)
+    {
+        await _dbContext.UserMetricLogs.AddRangeAsync(logs);
+        await _dbContext.SaveChangesAsync();
+    }
+
     public async Task<List<UserMetricLog>> GetByUserAndMetricAsync(Guid userId, MetricType metric, int limit = 30)
     {
         return await _dbContext.UserMetricLogs

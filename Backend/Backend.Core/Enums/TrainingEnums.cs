@@ -53,7 +53,6 @@ public enum SessionStatus
 
 public enum TrainingType
 {
-    FullBody,
     Push,
     Pull,
     Strength,
@@ -64,6 +63,7 @@ public enum TrainingType
 
 public enum BodyPartFocus
 {
+    FullBody,
     Chest,
     Back,
     Legs,

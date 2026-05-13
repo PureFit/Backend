@@ -1,13 +1,14 @@
 using Backend.Application.DTOs.Excercises;
+using Backend.Core.Entities.ExerciseRelated;
 
 namespace Backend.Application.Repositories;
 
-public interface IExternalExerciseRepository
+public interface IExerciseRepository
 {
     Task<ExercisePagedResult> GetExercisesAsync(ExerciseFilter filter);
-    Task<ExerciseDetailsDto?> GetExerciseDetailsAsync(string externalId);
-    Task<List<string>> GetMusclesAsync();
+    Task<ExerciseDetailsDto?> GetExerciseByIdAsync(Guid id);
     Task<List<BodyPartItemDto>> GetBodyPartsAsync();
     Task<List<EquipmentItemDto>> GetEquipmentsAsync();
-    Task<List<string>> GetExerciseTypesAsync();
+    Task<List<MuscleDto>> GetMusclesAsync();
+    Task<ExerciseType?> GetExerciseTypeAsync(Guid typeId);
 }

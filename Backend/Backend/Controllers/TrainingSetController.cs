@@ -87,7 +87,6 @@ namespace Backend.Controllers
         [HttpPost("{setId}/blocks/{blockId}/entries")]
         public async Task<IActionResult> AddEntry(Guid setId, Guid blockId, [FromBody] AddExerciseEntryToSetBlockRequest request)
         {
-            request.SetId = setId;
             request.BlockId = blockId;
             request.UserId = GetUserIdFromClaims();
             var result = await _trSetService.AddExerciseEntryToSetBlock(request);
@@ -97,8 +96,6 @@ namespace Backend.Controllers
         [HttpPatch("{setId}/blocks/{blockId}/entries/{entryId}")]
         public async Task<IActionResult> UpdateEntry(Guid setId, Guid blockId, Guid entryId, [FromBody] UpdateSetBlockExerciseEntryRequest request)
         {
-            request.SetId = setId;
-            request.BlockId = blockId;
             request.EntryId = entryId;
             var result = await _trSetService.UpdateSetBlockExerciseEntry(request, GetUserIdFromClaims());
             return result.Success ? Ok(result) : HandleError(result);
@@ -110,5 +107,6 @@ namespace Backend.Controllers
             var result = await _trSetService.DeleteExerciseEntry(entryId, GetUserIdFromClaims());
             return result.Success ? Ok(result) : HandleError(result);
         }
+
     }
 }

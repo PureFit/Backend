@@ -23,8 +23,8 @@ public class ExercisesController : BaseController
         return result.Success ? Ok(result) : HandleError(result);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetExerciseById(string id)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetExerciseById(Guid id)
     {
         var result = await _exerciseService.GetExerciseByIdAsync(id);
         return result.Success ? Ok(result) : HandleError(result);
@@ -48,13 +48,6 @@ public class ExercisesController : BaseController
     public async Task<IActionResult> GetEquipments()
     {
         var result = await _exerciseService.GetEquipmentsAsync();
-        return result.Success ? Ok(result) : HandleError(result);
-    }
-
-    [HttpGet("types")]
-    public async Task<IActionResult> GetTypes()
-    {
-        var result = await _exerciseService.GetExerciseTypesAsync();
         return result.Success ? Ok(result) : HandleError(result);
     }
 }

@@ -22,6 +22,19 @@ public class TrainingSetRepository : ITrainingSetRepository
             .Include(s => s.SetBlocks.OrderBy(b => b.Order))
                 .ThenInclude(b => b.ExerciseEntries.OrderBy(e => e.Order))
                     .ThenInclude(e => e.Intervals.OrderBy(i => i.Order))
+            .Include(s => s.SetBlocks)
+                .ThenInclude(b => b.ExerciseEntries)
+                    .ThenInclude(e => e.ExerciseType)
+            .Include(s => s.SetBlocks)
+                .ThenInclude(b => b.ExerciseEntries)
+                    .ThenInclude(e => e.Exercise)
+                        .ThenInclude(ex => ex.ExerciseMuscles)
+                            .ThenInclude(em => em.Muscle)
+            .Include(s => s.SetBlocks)
+                .ThenInclude(b => b.ExerciseEntries)
+                    .ThenInclude(e => e.Exercise)
+                        .ThenInclude(ex => ex.ExerciseBodyParts)
+                            .ThenInclude(eb => eb.BodyPart)
             .FirstOrDefaultAsync(s => s.Id == setId);
     }
 
@@ -40,7 +53,10 @@ public class TrainingSetRepository : ITrainingSetRepository
             query = query.Where(s => s.CreatedByUserId == filter.CreatedByUserId.Value &&
                 (s.SetAccessType == SetAccessType.Public || s.CreatedByUserId == userId));
         else
-            query = query.Where(s => s.SetAccessType == SetAccessType.Public || s.CreatedByUserId == userId);
+            // default sets (no owner) are always visible
+            query = query.Where(s => s.CreatedByUserId == null ||
+                s.SetAccessType == SetAccessType.Public ||
+                s.CreatedByUserId == userId);
 
         if (filter.AccessType.HasValue)
             query = query.Where(s => s.SetAccessType == filter.AccessType.Value);
@@ -52,36 +68,13 @@ public class TrainingSetRepository : ITrainingSetRepository
             query = query.Where(s => s.BodyPartFocus == filter.BodyPartFocus.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.SearchQuery))
-            query = query.Where(s => s.Name.Contains(filter.SearchQuery));
-
-        if (filter.ExcludeMuscleNames != null && filter.ExcludeMuscleNames.Count > 0)
-            query = query.Where(s => s.MusclePercentages == null ||
-                !filter.ExcludeMuscleNames.Any(m => s.MusclePercentages.ContainsKey(m)));
+            query = query.Where(s => EF.Functions.ILike(s.Name, $"%{filter.SearchQuery}%"));
 
         if (filter.ExcludeBodyPartFocus != null && filter.ExcludeBodyPartFocus.Count > 0)
             query = query.Where(s => s.BodyPartFocus == null ||
                 !filter.ExcludeBodyPartFocus.Contains(s.BodyPartFocus.Value));
 
         var totalCount = await query.CountAsync();
-
-        // подгружаем без пагинации только если нужна сортировка по мышцам
-        if (filter.SortByMuscles != null && filter.SortByMuscles.Count > 0)
-        {
-            var all = await query
-                .Include(s => s.SetBlocks.OrderBy(b => b.Order))
-                    .ThenInclude(b => b.ExerciseEntries.OrderBy(e => e.Order))
-                        .ThenInclude(e => e.Intervals.OrderBy(i => i.Order))
-                .ToListAsync();
-
-            var items = all
-                .OrderByDescending(s => filter.SortByMuscles
-                    .Sum(m => s.MusclePercentages?.GetValueOrDefault(m) ?? 0))
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToList();
-
-            return (items, totalCount);
-        }
 
         var defaultItems = await query
             .OrderByDescending(s => s.CreatedAt)
@@ -163,5 +156,13 @@ public class TrainingSetRepository : ITrainingSetRepository
     {
         _db.ExerciseEntries.Remove(entry);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<(int TotalSessions, int UniqueUsers)> GetSessionCountsAsync(Guid setId)
+    {
+        var sessions = _db.TrainingSessions.Where(s => s.TrainingSetId == setId);
+        var total = await sessions.CountAsync();
+        var unique = await sessions.Select(s => s.UserInfoId).Distinct().CountAsync();
+        return (total, unique);
     }
 }

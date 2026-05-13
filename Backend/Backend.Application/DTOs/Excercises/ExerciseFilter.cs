@@ -6,7 +6,7 @@ public class ExerciseFilter
     public string? BodyPart { get; set; }
     public string? Muscle { get; set; }
     public string? Equipment { get; set; }
-    public string? Type { get; set; }
-    public string? Cursor { get; set; }
-    public int Limit { get; set; } = 20;
+    public string? Category { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
 }

@@ -11,15 +11,18 @@ public class MuscleVisualizationService : IMuscleVisualizationService
     private readonly ISvgManipulationService _svgManipulationService;
     private readonly IHostEnvironment _env;
     private readonly SvgSettings _svgSettings;
+    private readonly ICacheService _cacheService;
 
     public MuscleVisualizationService(
         ISvgManipulationService svgManipulationService,
         IHostEnvironment env,
-        IOptions<SvgSettings> svgSettings)
+        IOptions<SvgSettings> svgSettings,
+        ICacheService cacheService)
     {
         _svgManipulationService = svgManipulationService;
         _env = env;
         _svgSettings = svgSettings.Value;
+        _cacheService = cacheService;
     }
 
     public async Task<string> GetPercentageSvgAsync(MuscleSvgPercentageRequest request)
@@ -36,8 +39,15 @@ public class MuscleVisualizationService : IMuscleVisualizationService
 
     private async Task<string> ReadSvgAsync(bool isMale)
     {
+        var cacheKey = CacheKeys.SvgBase(isMale);
+        var cached = await _cacheService.GetAsync<string>(cacheKey);
+        if (cached is not null) return cached;
+
         var fileName = isMale ? _svgSettings.ManSvgFileName : _svgSettings.WomanSvgFileName;
         var path = Path.Combine(_env.ContentRootPath, fileName);
-        return await File.ReadAllTextAsync(path);
+        var content = await File.ReadAllTextAsync(path);
+
+        await _cacheService.SetAsync(cacheKey, content, TimeSpan.FromDays(30));
+        return content;
     }
 }

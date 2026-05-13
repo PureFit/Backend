@@ -434,3 +434,10 @@ FodyWeavers.xsd
 **/appsettings.Development.json
 **/appsettings.*.json
 **/copilot-instructions.md
+
+**/*.gif
+**/*.jpg
+**/*.jpeg
+**/*.png
+**/*.webp
+**/*.gif

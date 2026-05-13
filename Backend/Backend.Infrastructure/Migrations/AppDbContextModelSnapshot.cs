@@ -23,6 +23,212 @@ namespace Backend.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.BodyPart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BodyParts");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Equipment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Equipments");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Exercise", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowsWeight")
+                        .HasColumnType("boolean");
+
+                    b.Property<float?>("BaseWeightBodyRatio")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GifUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<List<string>>("Instructions")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Overview")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<List<string>>("RelatedExerciseIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("Tips")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<List<string>>("Variations")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Exercises");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseBodyPart", b =>
+                {
+                    b.Property<Guid>("ExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BodyPartId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ExerciseId", "BodyPartId");
+
+                    b.HasIndex("BodyPartId");
+
+                    b.ToTable("ExerciseBodyParts");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseEquipment", b =>
+                {
+                    b.Property<Guid>("ExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EquipmentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ExerciseId", "EquipmentId");
+
+                    b.HasIndex("EquipmentId");
+
+                    b.ToTable("ExerciseEquipments");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseMuscle", b =>
+                {
+                    b.Property<Guid>("ExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MuscleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ExerciseId", "MuscleId");
+
+                    b.HasIndex("MuscleId");
+
+                    b.ToTable("ExerciseMuscles");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("AverageRepsPerMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("Coefficient")
+                        .HasColumnType("real");
+
+                    b.Property<Guid>("ExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MeasureCategory")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<float?>("ReferenceSpeedKmh")
+                        .HasColumnType("real");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.ToTable("ExerciseTypes");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Muscle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BodyPartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BodyPartId");
+
+                    b.ToTable("Muscles");
+                });
+
             modelBuilder.Entity("Backend.Core.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -113,27 +319,20 @@ namespace Backend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<List<string>>("BodyParts")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                    b.Property<float?>("DistanceMeters")
+                        .HasColumnType("real");
 
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ExerciseId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<Guid>("ExerciseId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("MeasureType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ExerciseTypeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Order")
                         .HasColumnType("integer");
-
-                    b.Property<Dictionary<string, float>>("Parameters")
-                        .HasColumnType("jsonb");
 
                     b.Property<int?>("Reps")
                         .HasColumnType("integer");
@@ -141,18 +340,20 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<int>("RestAfterCurrentEntrySeconds")
                         .HasColumnType("integer");
 
-                    b.Property<List<string>>("SecondaryMuscles")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<Guid>("SetBlockId")
                         .HasColumnType("uuid");
 
-                    b.Property<List<string>>("TargetMuscles")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                    b.Property<float?>("SpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("WeightKg")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.HasIndex("ExerciseTypeId");
 
                     b.HasIndex("SetBlockId");
 
@@ -165,7 +366,10 @@ namespace Backend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("DurationSeconds")
+                    b.Property<float?>("DistanceMeters")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("DurationSeconds")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("ExerciseEntryId")
@@ -174,11 +378,14 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<Dictionary<string, float>>("Parameters")
-                        .HasColumnType("jsonb");
-
                     b.Property<int?>("Reps")
                         .HasColumnType("integer");
+
+                    b.Property<float?>("SpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("WeightKg")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
@@ -275,6 +482,9 @@ namespace Backend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
@@ -345,9 +555,6 @@ namespace Backend.Infrastructure.Migrations
                     b.Property<string>("BodyPartFocus")
                         .HasColumnType("text");
 
-                    b.Property<Dictionary<string, float>>("BodyPartPercentages")
-                        .HasColumnType("jsonb");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -360,9 +567,6 @@ namespace Backend.Infrastructure.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
-
-                    b.Property<Dictionary<string, float>>("MusclePercentages")
-                        .HasColumnType("jsonb");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -609,6 +813,85 @@ namespace Backend.Infrastructure.Migrations
                     b.ToTable("UserMetricLogs");
                 });
 
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseBodyPart", b =>
+                {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.BodyPart", "BodyPart")
+                        .WithMany("ExerciseBodyParts")
+                        .HasForeignKey("BodyPartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Exercise", "Exercise")
+                        .WithMany("ExerciseBodyParts")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BodyPart");
+
+                    b.Navigation("Exercise");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseEquipment", b =>
+                {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Equipment", "Equipment")
+                        .WithMany("ExerciseEquipments")
+                        .HasForeignKey("EquipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Exercise", "Exercise")
+                        .WithMany("ExerciseEquipments")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipment");
+
+                    b.Navigation("Exercise");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseMuscle", b =>
+                {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Exercise", "Exercise")
+                        .WithMany("ExerciseMuscles")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Muscle", "Muscle")
+                        .WithMany("ExerciseMuscles")
+                        .HasForeignKey("MuscleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("Muscle");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.ExerciseType", b =>
+                {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Exercise", "Exercise")
+                        .WithMany("ExerciseTypes")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Muscle", b =>
+                {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.BodyPart", "BodyPart")
+                        .WithMany("Muscles")
+                        .HasForeignKey("BodyPartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BodyPart");
+                });
+
             modelBuilder.Entity("Backend.Core.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Backend.Core.Entities.User", "User")
@@ -640,11 +923,27 @@ namespace Backend.Infrastructure.Migrations
 
             modelBuilder.Entity("Backend.Core.Entities.TrainingRelated.ExerciseEntry", b =>
                 {
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Core.Entities.ExerciseRelated.ExerciseType", "ExerciseType")
+                        .WithMany()
+                        .HasForeignKey("ExerciseTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Backend.Core.Entities.TrainingRelated.SetBlock", "SetBlock")
                         .WithMany("ExerciseEntries")
                         .HasForeignKey("SetBlockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("ExerciseType");
 
                     b.Navigation("SetBlock");
                 });
@@ -801,6 +1100,34 @@ namespace Backend.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.BodyPart", b =>
+                {
+                    b.Navigation("ExerciseBodyParts");
+
+                    b.Navigation("Muscles");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Equipment", b =>
+                {
+                    b.Navigation("ExerciseEquipments");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Exercise", b =>
+                {
+                    b.Navigation("ExerciseBodyParts");
+
+                    b.Navigation("ExerciseEquipments");
+
+                    b.Navigation("ExerciseMuscles");
+
+                    b.Navigation("ExerciseTypes");
+                });
+
+            modelBuilder.Entity("Backend.Core.Entities.ExerciseRelated.Muscle", b =>
+                {
+                    b.Navigation("ExerciseMuscles");
                 });
 
             modelBuilder.Entity("Backend.Core.Entities.TrainingRelated.AIPlan", b =>

@@ -1,9 +1,7 @@
 namespace Backend.Application.DTOs.TrainingSet;
 
-public class ExerciseIntervalResponse
+public class AddIntervalRequest
 {
-    public Guid Id { get; set; }
-    public int Order { get; set; }
     public int? Reps { get; set; }
     public int? DurationSeconds { get; set; }
     public float? DistanceMeters { get; set; }

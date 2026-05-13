@@ -1,12 +1,8 @@
-using System.Text;
-using System.Text.Json.Serialization;
 using Backend.Application.Common;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
-using Backend.Application.Repositories;
 using Backend.Application.Services.impl;
 using Backend.Infrastructure.Persistence;
-using Backend.Infrastructure.ExternalApi;
 using Backend.Infrastructure.Repositories;
 using Backend.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Serilog;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,10 +81,8 @@ builder.Services.AddScoped<IUserGoogleTokenRepository, UserGoogleTokenRepository
 builder.Services.AddScoped<IGoogleOAuthService, GoogleOAuthService>();
 builder.Services.AddHttpClient<GoogleOAuthService>();
 
-builder.Services.Configure<ExerciseApiSettings>(builder.Configuration.GetSection("ExerciseApi"));
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
-builder.Services.AddScoped<IExternalExerciseRepository, ExerciseApiClient>();
-builder.Services.AddHttpClient<ExerciseApiClient>();
+builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 
 builder.Services.AddScoped<ISvgManipulationService, SvgManipulationService>();
 builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationService>();
@@ -103,6 +99,7 @@ if (app.Environment.IsDevelopment())
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

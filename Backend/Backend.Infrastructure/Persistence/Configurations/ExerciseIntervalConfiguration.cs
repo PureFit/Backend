@@ -10,7 +10,10 @@ public class ExerciseIntervalConfiguration : IEntityTypeConfiguration<ExerciseIn
     {
         builder.HasKey(i => i.Id);
 
-        builder.Property(i => i.DurationSeconds).IsRequired();
-        builder.Property(i => i.Parameters).HasColumnType("jsonb");
+        builder.Property(i => i.Reps).IsRequired(false);
+        builder.Property(i => i.DurationSeconds).IsRequired(false);
+        builder.Property(i => i.DistanceMeters).IsRequired(false);
+        builder.Property(i => i.WeightKg).IsRequired(false);
+        builder.Property(i => i.SpeedKmh).IsRequired(false);
     }
 }

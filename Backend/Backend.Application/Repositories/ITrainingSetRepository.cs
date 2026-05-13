@@ -7,6 +7,7 @@ public interface ITrainingSetRepository
 {
     // TrainingSet
     Task<TrainingSet?> GetByIdAsync(Guid setId);
+    Task<(int TotalSessions, int UniqueUsers)> GetSessionCountsAsync(Guid setId);
     Task<(List<TrainingSet> Items, int TotalCount)> GetByFilterAsync(TrainingSetFilter filter, Guid userId);
     Task<Guid> AddAsync(TrainingSet trainingSet);
     Task UpdateAsync(TrainingSet trainingSet);

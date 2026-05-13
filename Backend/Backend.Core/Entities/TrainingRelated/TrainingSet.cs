@@ -19,14 +19,6 @@ namespace Backend.Core.Entities.TrainingRelated
         public TrainingType? TrainingType { get; set; }
         public BodyPartFocus? BodyPartFocus { get; set; }
 
-        // Денормализованные проценты для быстрой фильтрации/сортировки.
-        // Пересчитываются при добавлении/удалении упражнений и изменении SetsCount блока.
-        [Column(TypeName = "jsonb")]
-        public Dictionary<string, float>? MusclePercentages { get; set; }
-
-        [Column(TypeName = "jsonb")]
-        public Dictionary<string, float>? BodyPartPercentages { get; set; }
-
         public List<SetBlock> SetBlocks { get; set; } = [];
 
         public PlanTraining? PlanTraining { get; set; }

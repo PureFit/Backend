@@ -12,6 +12,7 @@ namespace Backend.Core.Entities.TrainingRelated
 
         public List<ExerciseEntry> ExerciseEntries { get; set; } = [];
 
+        public string? Name { get; set; }
         public int Order { get; set; }
         public int SetsCount { get; set; } // how many times the full block should be performed
         public int RestBetweenSetsSeconds { get; set; }   // rest between each set repetition
