@@ -14,6 +14,7 @@ public class PlanService : IPlanService
     private readonly IPlanRepository _planRepository;
     private readonly IPlanGenerator _planGenerator;
     private readonly IPlanScheduler _planScheduler;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<PlanService> _logger;
 
     public PlanService(
@@ -21,12 +22,14 @@ public class PlanService : IPlanService
         IPlanRepository planRepository,
         IPlanGenerator planGenerator,
         IPlanScheduler planScheduler,
+        ICacheService cacheService,
         ILogger<PlanService> logger)
     {
         _userInfoRepository = userInfoRepository;
         _planRepository = planRepository;
         _planGenerator = planGenerator;
         _planScheduler = planScheduler;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -47,7 +50,10 @@ public class PlanService : IPlanService
 
         var scheduled = await _planScheduler.ScheduleAsync(result.Data, userId, request.SessionDurationMinutes);
 
-        var plan = MapToAIPlan(scheduled, request, userInfo);
+        var briefs = await _cacheService.GetAsync<List<ExerciseBrief>>(CacheKeys.ExercisesBrief) ?? [];
+        var exerciseTypeMap = briefs.ToDictionary(b => b.Id, b => b.Types);
+
+        var plan = MapToAIPlan(scheduled, request, userInfo, exerciseTypeMap);
 
         await _planRepository.AddAsync(plan);
 
@@ -101,6 +107,28 @@ public class PlanService : IPlanService
         return BaseResponse<bool>.Ok(true);
     }
 
+    public async Task<BaseResponse<bool>> RescheduleTrainingAsync(Guid userId, Guid trainingId, DateTime newStartDate)
+    {
+        var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);
+        if (userInfo == null) return BaseResponse<bool>.Fail(ErrorEnums.UserNotFound);
+        if (userInfo.CurrentPlanId == null) return BaseResponse<bool>.Fail(ErrorEnums.PlanNotFound);
+
+        var plan = await _planRepository.GetByIdWithDetailsAsync(userInfo.CurrentPlanId.Value);
+        if (plan == null) return BaseResponse<bool>.Fail(ErrorEnums.PlanNotFound);
+
+        var training = plan.WeekPlans
+            .SelectMany(w => w.PlanTrainings)
+            .FirstOrDefault(t => t.Id == trainingId);
+        if (training == null) return BaseResponse<bool>.Fail(ErrorEnums.TrainingNotFound);
+
+        var duration = (training.EndPlannedDate - training.StartPlannedDate).TotalMinutes;
+        training.StartPlannedDate = DateTime.SpecifyKind(newStartDate, DateTimeKind.Utc);
+        training.EndPlannedDate = DateTime.SpecifyKind(newStartDate.AddMinutes(duration), DateTimeKind.Utc);
+
+        await _planRepository.UpdateAsync(plan);
+        return BaseResponse<bool>.Ok(true);
+    }
+
     public async Task<BaseResponse<bool>> HasPlanAsync(Guid userId)
     {
         var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);
@@ -134,7 +162,7 @@ public class PlanService : IPlanService
         };
     }
 
-    private static AIPlan MapToAIPlan(ScheduledPlanDto scheduled, CreatePlanRequest request, UserInfo userInfo)
+    private static AIPlan MapToAIPlan(ScheduledPlanDto scheduled, CreatePlanRequest request, UserInfo userInfo, Dictionary<Guid, List<ExerciseTypeBrief>> exerciseTypeMap)
     {
         if (!Enum.TryParse<PlanType>(request.PlanType, true, out var planType))
             planType = PlanType.Mix;
@@ -175,7 +203,7 @@ public class PlanService : IPlanService
 
             weekPlan.PlanTrainings = w.Trainings.Select(t =>
             {
-                var trainingSet = BuildTrainingSet(t, userInfo.UserId);
+                var trainingSet = BuildTrainingSet(t, userInfo.UserId, exerciseTypeMap);
 
                 var planTraining = new PlanTraining
                 {
@@ -199,7 +227,7 @@ public class PlanService : IPlanService
         return plan;
     }
 
-    private static TrainingSet BuildTrainingSet(ScheduledTrainingDto training, Guid createdByUserId)
+    private static TrainingSet BuildTrainingSet(ScheduledTrainingDto training, Guid createdByUserId, Dictionary<Guid, List<ExerciseTypeBrief>> exerciseTypeMap)
     {
         var trainingSet = new TrainingSet
         {
@@ -224,14 +252,19 @@ public class PlanService : IPlanService
                 TrainingSetId = trainingSet.Id
             };
 
-            block.ExerciseEntries = b.Exercises.Select(e =>
+            block.ExerciseEntries = b.Exercises
+                .Where(e => exerciseTypeMap.ContainsKey(e.ExerciseId))
+                .Select(e =>
             {
+                var types = exerciseTypeMap[e.ExerciseId];
+                var typeId = ResolveExerciseTypeId(e, types);
+
                 var entry = new ExerciseEntry
                 {
                     Id = Guid.NewGuid(),
                     Order = e.Order,
                     ExerciseId = e.ExerciseId,
-                    ExerciseTypeId = e.ExerciseTypeId,
+                    ExerciseTypeId = typeId,
                     Reps = e.Reps,
                     DurationSeconds = e.DurationSeconds,
                     DistanceMeters = e.DistanceMeters,
@@ -260,6 +293,19 @@ public class PlanService : IPlanService
         }).ToList();
 
         return trainingSet;
+    }
+
+    private static Guid ResolveExerciseTypeId(ExerciseEntryFullDto e, List<ExerciseTypeBrief> types)
+    {
+        if (types.Count == 1) return types[0].Id;
+
+        if (e.DurationSeconds.HasValue)
+            return types.FirstOrDefault(t => t.Measure == "DurationOnly")?.Id ?? types[0].Id;
+
+        if (e.DistanceMeters.HasValue)
+            return types.FirstOrDefault(t => t.Measure == "DistanceBased")?.Id ?? types[0].Id;
+
+        return types.FirstOrDefault(t => t.Measure == "RepsBased")?.Id ?? types[0].Id;
     }
 
     private static PlanDto MapToPlanDto(AIPlan plan) => new()
@@ -293,7 +339,8 @@ public class PlanService : IPlanService
                         {
                             Id = t.TrainingSet.Id,
                             Name = t.TrainingSet.Name
-                        }
+                        },
+                        IsCompleted = t.TrainingSession != null
                     }).ToList()
             }).ToList()
     };

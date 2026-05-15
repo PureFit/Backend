@@ -63,7 +63,7 @@ internal static class TrainingSlotHelper
             foreach (var day in candidates)
             {
                 if (result.Count >= count) break;
-                result.Add(day.ToDateTime(new TimeOnly(9, 0)));
+                result.Add(DateTime.SpecifyKind(day.ToDateTime(new TimeOnly(9, 0)), DateTimeKind.Utc));
                 usedDays.Add(day);
             }
         }
@@ -84,7 +84,7 @@ internal static class TrainingSlotHelper
 
         while (current.AddMinutes(durationMinutes) <= WorkdayEnd)
         {
-            var slotStart = day.ToDateTime(current);
+            var slotStart = DateTime.SpecifyKind(day.ToDateTime(current), DateTimeKind.Utc);
             var slotEnd = slotStart.AddMinutes(durationMinutes);
 
             var hasConflict = eventsOnDay.Any(e =>

@@ -8,7 +8,7 @@ public static class PromptConstants
         Your task is to generate a detailed, structured training plan based on the user's profile and goals.
 
         Rules:
-        - Use only exercises from the provided catalog (referenced by their exact ID)
+        - CRITICAL: Use ONLY exercise IDs from the catalog below. Never invent or guess IDs. If unsure, pick the closest match from the catalog.
         - Match equipment to what the user has available
         - Respect the session duration and frequency constraints
         - Structure the plan with progressive overload across weeks
@@ -39,7 +39,6 @@ public static class PromptConstants
                         {
                           "order": 1,
                           "exerciseId": "uuid",
-                          "exerciseTypeId": "uuid",
                           "reps": 10,
                           "durationSeconds": null,
                           "distanceMeters": null,

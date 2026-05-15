@@ -9,4 +9,5 @@ public interface IPlanService
     Task<BaseResponse<PlanDto>> GetPlanAsync(Guid userId);
     Task<BaseResponse<bool>> CreatePlanAsync(Guid userId, CreatePlanRequest request);
     Task<BaseResponse<bool>> DeletePlanAsync(Guid userId);
+    Task<BaseResponse<bool>> RescheduleTrainingAsync(Guid userId, Guid trainingId, DateTime newStartDate);
 }

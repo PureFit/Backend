@@ -47,7 +47,6 @@ public class ExerciseEntryFullDto
 {
     public int Order { get; set; }
     public Guid ExerciseId { get; set; }
-    public Guid ExerciseTypeId { get; set; }
 
     // Базовые параметры (заполняется если нет интервалов)
     public int? Reps { get; set; }

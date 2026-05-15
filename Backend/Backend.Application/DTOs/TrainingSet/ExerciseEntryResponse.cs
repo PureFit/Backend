@@ -4,6 +4,7 @@ public class ExerciseEntryResponse
 {
     public Guid Id { get; set; }
     public Guid ExerciseId { get; set; }
+    public string? ExerciseName { get; set; }
     public Guid ExerciseTypeId { get; set; }
     public int Order { get; set; }
     public int? Reps { get; set; }

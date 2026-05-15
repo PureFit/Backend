@@ -30,6 +30,7 @@ public class PlanTrainingDto
     public string Description { get; set; } = null!;
     public string StartPlannedDate { get; set; } = null!;
     public TrainingSetSummaryDto? TrainingSet { get; set; }
+    public bool IsCompleted { get; set; }
 }
 
 public class TrainingSetSummaryDto

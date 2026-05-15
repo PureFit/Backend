@@ -11,7 +11,8 @@ public class AIService : IAIService
     private readonly ILogger<AIService> _logger;
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
     };
 
     public AIService(IAIClient aiClient, ILogger<AIService> logger)
