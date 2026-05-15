@@ -56,6 +56,14 @@ public class PlanController : BaseController
         return Accepted(BaseResponse<bool>.Ok(true));
     }
 
+    [HttpPatch("training/{trainingId}/reschedule")]
+    public async Task<IActionResult> RescheduleTraining(Guid trainingId, [FromBody] RescheduleTrainingRequest request)
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _planService.RescheduleTrainingAsync(userId, trainingId, request.NewStartDate);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
     [HttpDelete]
     public async Task<IActionResult> DeletePlan()
     {

@@ -34,6 +34,7 @@ public static class TrainingSetMapper
     {
         Id = entry.Id,
         ExerciseId = entry.ExerciseId,
+        ExerciseName = entry.Exercise?.Name,
         ExerciseTypeId = entry.ExerciseTypeId,
         Order = entry.Order,
         Reps = entry.Reps,

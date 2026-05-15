@@ -212,7 +212,11 @@ public class ExerciseRepository : IExerciseRepository
                 BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
                 Muscles = e.ExerciseMuscles.Select(em => em.Muscle.Name).ToList(),
                 Equipment = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
-                Measure = e.ExerciseTypes.Select(t => t.MeasureCategory.ToString()).FirstOrDefault() ?? "Reps"
+                Types = e.ExerciseTypes.Select(t => new ExerciseTypeBrief
+                {
+                    Id = t.Id,
+                    Measure = t.MeasureCategory.ToString()
+                }).ToList()
             })
             .ToListAsync();
 }

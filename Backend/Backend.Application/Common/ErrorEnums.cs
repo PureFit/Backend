@@ -25,6 +25,7 @@ public enum ErrorEnums
     PlanAlreadyExists,
     PlanNotFound,
     PlanGenerationFailed,
+    TrainingNotFound,
 
     // General
     UnknownError,

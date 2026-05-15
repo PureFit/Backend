@@ -23,6 +23,9 @@ public class PlanRepository : IPlanRepository
                         .ThenInclude(ts => ts.SetBlocks)
                             .ThenInclude(b => b.ExerciseEntries)
                                 .ThenInclude(e => e.Intervals)
+            .Include(p => p.WeekPlans)
+                .ThenInclude(w => w.PlanTrainings)
+                    .ThenInclude(t => t.TrainingSession)
             .FirstOrDefaultAsync(p => p.Id == planId);
     }
 
