@@ -1,4 +1,5 @@
 using Backend.Application.DTOs.Excercises;
+using Backend.Application.DTOs.Plan;
 using Backend.Application.Repositories;
 using Backend.Core.Entities.ExerciseRelated;
 using Backend.Infrastructure.Persistence;
@@ -197,4 +198,21 @@ public class ExerciseRepository : IExerciseRepository
 
     public async Task<ExerciseType?> GetExerciseTypeAsync(Guid typeId) =>
         await _db.ExerciseTypes.FirstOrDefaultAsync(t => t.Id == typeId);
+
+    public async Task<List<ExerciseBrief>> GetExercisesBriefAsync() =>
+        await _db.Exercises
+            .Include(e => e.ExerciseTypes)
+            .Include(e => e.ExerciseMuscles).ThenInclude(em => em.Muscle)
+            .Include(e => e.ExerciseBodyParts).ThenInclude(eb => eb.BodyPart)
+            .Include(e => e.ExerciseEquipments).ThenInclude(ee => ee.Equipment)
+            .Select(e => new ExerciseBrief
+            {
+                Id = e.Id,
+                Name = e.Name,
+                BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+                Muscles = e.ExerciseMuscles.Select(em => em.Muscle.Name).ToList(),
+                Equipment = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+                Measure = e.ExerciseTypes.Select(t => t.MeasureCategory.ToString()).FirstOrDefault() ?? "Reps"
+            })
+            .ToListAsync();
 }

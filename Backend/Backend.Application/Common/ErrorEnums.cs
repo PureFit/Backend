@@ -21,6 +21,11 @@ public enum ErrorEnums
     WrongAuthProvider,
     CalendarNotConnected,
 
+    // Plan
+    PlanAlreadyExists,
+    PlanNotFound,
+    PlanGenerationFailed,
+
     // General
     UnknownError,
     NotFound,

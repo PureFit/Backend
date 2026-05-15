@@ -14,8 +14,13 @@ public class AIPlanConfiguration : IEntityTypeConfiguration<AIPlan>
         builder.Property(p => p.Description).IsRequired().HasMaxLength(1000);
         builder.Property(p => p.Status).IsRequired().HasConversion<string>();
         builder.Property(p => p.PlanType).IsRequired().HasConversion<string>();
+        builder.Property(p => p.PlanSubType).IsRequired().HasConversion<string>();
         builder.Property(p => p.CreatedAt).IsRequired();
         builder.Property(p => p.GoalMetadata).HasColumnType("jsonb");
+        builder.Property(p => p.AvailableEquipment).HasColumnType("jsonb");
+        builder.Property(p => p.SessionsPerWeek).IsRequired();
+        builder.Property(p => p.SessionDurationMinutes).IsRequired();
+        builder.Property(p => p.PlanDurationWeeks).IsRequired();
 
         // Основная связь: WeekPlan принадлежит AIPlan (cascade delete).
         builder.HasMany(p => p.WeekPlans)

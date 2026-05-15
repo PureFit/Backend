@@ -2,7 +2,9 @@ namespace Backend.Core.Enums;
 
 public enum PlanStatus
 {
+    Generating,
     Active,
+    Failed,
     Completed,
     Paused,
     Archived
@@ -14,7 +16,27 @@ public enum PlanType
     Mix,
     BodyComposition,
     AestheticShaping,
-    HealthAndRehabilitation
+    HealthRehab
+}
+
+public enum PlanSubType
+{
+    // Performance
+    Competitions,
+    StrengthGain,
+    Endurance,
+    // Mix
+    Custom,
+    // BodyComposition
+    FatLoss,
+    Hypertrophy,
+    // AestheticShaping
+    BodyPartFocus,
+    FullBodyRelief,
+    // HealthRehab
+    PostureAndBack,
+    MobilityFlexibility,
+    GFP
 }
 
 public enum WeekStatus

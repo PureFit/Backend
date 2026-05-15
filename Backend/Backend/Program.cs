@@ -67,6 +67,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(jwtSection["SecretKey"]!))
         };
     });
+builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -90,6 +91,16 @@ builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationServi
 builder.Services.AddScoped<ITrainingSetRepository, TrainingSetRepository>();
 builder.Services.AddScoped<ITrainingSetService, TrainingSetService>();
 builder.Services.AddScoped<IMuscleCalculatorService, MuscleCalculatorService>();
+
+builder.Services.Configure<GroqSettings>(builder.Configuration.GetSection("GroqSettings"));
+builder.Services.AddHttpClient<IAIClient, GroqClient>();
+builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
+builder.Services.AddScoped<ICorePromptEnricher, CorePromptEnricher>();
+builder.Services.AddScoped<IPlanGenerator, PlanGenerator>();
+builder.Services.AddScoped<IPlanRepository, PlanRepository>();
+builder.Services.AddScoped<IPlanScheduler, PlanScheduler>();
+builder.Services.AddScoped<IPlanService, PlanService>();
 
 var app = builder.Build();
 

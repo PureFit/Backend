@@ -1,0 +1,46 @@
+using Backend.Application.Repositories;
+using Backend.Core.Entities.TrainingRelated;
+using Backend.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Backend.Infrastructure.Repositories;
+
+public class PlanRepository : IPlanRepository
+{
+    private readonly AppDbContext _dbContext;
+
+    public PlanRepository(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<AIPlan?> GetByIdWithDetailsAsync(Guid planId)
+    {
+        return await _dbContext.AiPlans
+            .Include(p => p.WeekPlans)
+                .ThenInclude(w => w.PlanTrainings)
+                    .ThenInclude(t => t.TrainingSet)
+                        .ThenInclude(ts => ts.SetBlocks)
+                            .ThenInclude(b => b.ExerciseEntries)
+                                .ThenInclude(e => e.Intervals)
+            .FirstOrDefaultAsync(p => p.Id == planId);
+    }
+
+    public async Task AddAsync(AIPlan plan)
+    {
+        await _dbContext.AiPlans.AddAsync(plan);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(AIPlan plan)
+    {
+        _dbContext.AiPlans.Update(plan);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(AIPlan plan)
+    {
+        _dbContext.AiPlans.Remove(plan);
+        await _dbContext.SaveChangesAsync();
+    }
+}
