@@ -25,6 +25,7 @@ public static class CacheKeys
     }
 
     public static string ExerciseDetail(string id) => $"exercise:{id}";
+    public const string ExercisesBrief = $"exercises:brief";
 
     public const string Muscles       = "muscles";
     public const string BodyParts     = "body-parts";

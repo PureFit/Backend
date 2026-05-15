@@ -17,11 +17,19 @@ namespace Backend.Core.Entities.TrainingRelated
         public DateTime? CompletedAt { get; set; }
 
         public PlanType PlanType { get; set; }
+        public PlanSubType PlanSubType { get; set; }
 
         [Column(TypeName = "jsonb")]
         public string? GoalMetadata { get; set; }
-        // Данные опросника под конкретный PlanType.
-        // Десериализуется сервисом в типизированный DTO по значению PlanType.
+
+        public int SessionsPerWeek { get; set; }
+        public int SessionDurationMinutes { get; set; }
+        public int PlanDurationWeeks { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public List<string> AvailableEquipment { get; set; } = [];
+
+        public string? FreeTextWish { get; set; }
 
         public Guid? CurrentWeekId { get; set; }
         public WeekPlan? CurrentWeek { get; set; }
