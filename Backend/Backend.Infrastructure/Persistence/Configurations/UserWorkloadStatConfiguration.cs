@@ -12,7 +12,8 @@ public class UserWorkloadStatConfiguration : IEntityTypeConfiguration<UserWorklo
 
         builder.Property(s => s.Name).IsRequired().HasMaxLength(100);
         builder.Property(s => s.Category).IsRequired().HasConversion<string>();
-        builder.Property(s => s.TotalPercent).IsRequired();
+        builder.Property(s => s.AccumulatedVolume).IsRequired();
+        builder.Property(s => s.SessionCount).IsRequired();
         builder.Property(s => s.LastUpdatedAt).IsRequired();
 
         builder.HasOne(s => s.UserInfo)

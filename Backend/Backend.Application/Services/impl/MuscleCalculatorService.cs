@@ -101,6 +101,32 @@ public class MuscleCalculatorService : IMuscleCalculatorService
         return BaseResponse<(Dictionary<string, float> MusclePercentages, Dictionary<string, float> BodyPartPercentages)>.Ok((muscleResult, bodyPartResult));
     }
 
+    public async Task<BaseResponse<(Dictionary<string, float> MuscleVolumes, Dictionary<string, float> BodyPartVolumes)>> CalculateRawVolumeForSetAsync(Guid setId, float userWeightKg)
+    {
+        var set = await _repo.GetByIdAsync(setId);
+        if (set is null)
+            return BaseResponse<(Dictionary<string, float>, Dictionary<string, float>)>.Fail(ErrorEnums.NotFound);
+
+        var muscleVolumes   = new Dictionary<string, float>();
+        var bodyPartVolumes = new Dictionary<string, float>();
+
+        foreach (var entry in set.SetBlocks.SelectMany(sb => sb.ExerciseEntries))
+        {
+            var volume = CalculateVolume(entry, userWeightKg);
+
+            foreach (var em in entry.Exercise.ExerciseMuscles)
+            {
+                var effective = em.Role == MuscleRole.Primary ? volume : volume * _muscleCalculatorConfig.SecondaryCoefficient;
+                muscleVolumes[em.Muscle.Name] = muscleVolumes.GetValueOrDefault(em.Muscle.Name) + effective;
+            }
+
+            foreach (var eb in entry.Exercise.ExerciseBodyParts)
+                bodyPartVolumes[eb.BodyPart.Name] = bodyPartVolumes.GetValueOrDefault(eb.BodyPart.Name) + volume;
+        }
+
+        return BaseResponse<(Dictionary<string, float>, Dictionary<string, float>)>.Ok((muscleVolumes, bodyPartVolumes));
+    }
+
     private float CalculateVolume(ExerciseEntry entry, float userWeightKg)
     {
         float baseVolume = entry.Intervals.Count > 0

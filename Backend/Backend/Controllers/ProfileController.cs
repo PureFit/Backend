@@ -88,6 +88,14 @@ public class ProfileController : BaseController
         return Ok(result);
     }
 
+    [HttpGet("workload-stats")]
+    public async Task<IActionResult> GetWorkloadStats()
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _profileService.GetWorkloadStatsAsync(userId);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
     [HttpGet("calendar/events")]
     public async Task<IActionResult> GetCalendarEvents(
         [FromQuery] DateTime from,

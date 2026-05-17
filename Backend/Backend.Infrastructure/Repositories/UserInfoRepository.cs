@@ -19,6 +19,13 @@ public class UserInfoRepository : IUserInfoRepository
         return await _dbContext.UserInfos.FirstOrDefaultAsync(u => u.UserId == userId);
     }
 
+    public async Task<UserInfo?> GetByUserIdWithStatsAsync(Guid userId)
+    {
+        return await _dbContext.UserInfos
+            .Include(u => u.WorkloadStats)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
+
     public async Task AddAsync(UserInfo userInfo)
     {
         await _dbContext.UserInfos.AddAsync(userInfo);
