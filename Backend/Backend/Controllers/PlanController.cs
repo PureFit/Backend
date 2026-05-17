@@ -64,6 +64,14 @@ public class PlanController : BaseController
         return result.Success ? Ok(result) : HandleError(result);
     }
 
+    [HttpGet("set/{trainingSetId}/completed")]
+    public async Task<IActionResult> HasCompletedSessionForSet(Guid trainingSetId)
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _planService.HasCompletedSessionForSetAsync(userId, trainingSetId);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
     [HttpDelete]
     public async Task<IActionResult> DeletePlan()
     {

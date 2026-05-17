@@ -160,7 +160,9 @@ public class TrainingSetRepository : ITrainingSetRepository
 
     public async Task<(int TotalSessions, int UniqueUsers)> GetSessionCountsAsync(Guid setId)
     {
-        var sessions = _db.TrainingSessions.Where(s => s.TrainingSetId == setId);
+        var sessions = _db.TrainingSessions.Where(s =>
+            s.TrainingSetId == setId &&
+            s.Status == Core.Enums.SessionStatus.Completed);
         var total = await sessions.CountAsync();
         var unique = await sessions.Select(s => s.UserInfoId).Distinct().CountAsync();
         return (total, unique);

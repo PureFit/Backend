@@ -138,6 +138,19 @@ public class PlanService : IPlanService
         return BaseResponse<bool>.Ok(userInfo.CurrentPlanId != null);
     }
 
+    public async Task<BaseResponse<bool>> HasCompletedSessionForSetAsync(Guid userId, Guid trainingSetId)
+    {
+        var user = await _userInfoRepository.GetByUserIdAsync(userId);
+        if (user == null)
+        {
+            _logger.LogWarning("User not found for ID {UserId}", userId);
+            return BaseResponse<bool>.Fail(ErrorEnums.UserNotFound);
+        }
+
+        var isTrainingDone = await _planRepository.HasCompletedSessionForSetAsync(trainingSetId, user.Id);
+        return BaseResponse<bool>.Ok(isTrainingDone);
+    }
+
     private static GeneratePlanRequest MapToGenerateRequest(CreatePlanRequest request, UserInfo userInfo)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -340,7 +353,9 @@ public class PlanService : IPlanService
                             Id = t.TrainingSet.Id,
                             Name = t.TrainingSet.Name
                         },
-                        IsCompleted = t.TrainingSession != null
+                        IsCompleted = t.TrainingSession != null && t.TrainingSession.Status == Backend.Core.Enums.SessionStatus.Completed,
+                        CompletedSessionId = t.TrainingSession != null && t.TrainingSession.Status == Backend.Core.Enums.SessionStatus.Completed
+                            ? t.TrainingSession.Id : (Guid?)null
                     }).ToList()
             }).ToList()
     };

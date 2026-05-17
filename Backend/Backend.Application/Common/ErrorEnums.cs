@@ -27,6 +27,9 @@ public enum ErrorEnums
     PlanGenerationFailed,
     TrainingNotFound,
 
+    // Session
+    SessionNotFound,
+
     // General
     UnknownError,
     NotFound,

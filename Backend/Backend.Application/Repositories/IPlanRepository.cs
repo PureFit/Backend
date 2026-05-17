@@ -8,4 +8,9 @@ public interface IPlanRepository
     Task AddAsync(AIPlan plan);
     Task UpdateAsync(AIPlan plan);
     Task DeleteAsync(AIPlan plan);
+
+    /// <summary>
+    /// Есть ли хотя бы одна завершённая сессия по данному trainingSetId от данного юзера.
+    /// </summary>
+    Task<bool> HasCompletedSessionForSetAsync(Guid trainingSetId, Guid userId);
 }

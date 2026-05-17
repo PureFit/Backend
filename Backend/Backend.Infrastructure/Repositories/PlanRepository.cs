@@ -1,4 +1,5 @@
 using Backend.Application.Repositories;
+using Backend.Core.Entities;
 using Backend.Core.Entities.TrainingRelated;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -45,5 +46,15 @@ public class PlanRepository : IPlanRepository
     {
         _dbContext.AiPlans.Remove(plan);
         await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Загружает PlanTraining вместе с TrainingSession.
+    /// Проверяет принадлежность пользователю через цепочку WeekPlan → AIPlan → UserInfo.
+    /// </summary>
+    public async Task<bool> HasCompletedSessionForSetAsync(Guid trainingSetId, Guid userId)
+    {
+        return await _dbContext.TrainingSessions
+            .AnyAsync(x => userId == x.UserInfo.UserId && trainingSetId == x.TrainingSetId);
     }
 }
