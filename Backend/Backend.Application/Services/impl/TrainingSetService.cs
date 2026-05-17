@@ -92,9 +92,29 @@ public class TrainingSetService : ITrainingSetService
         {
             var matchingSets = await _repo.GetByFilterAsync(filter, userId);
 
+            var publicIds = matchingSets.Items
+                .Where(s => s.SetAccessType == Core.Enums.SetAccessType.Public)
+                .Select(s => s.Id)
+                .ToList();
+
+            var countsBulk = publicIds.Count > 0
+                ? await _repo.GetSessionCountsBulkAsync(publicIds)
+                : new Dictionary<Guid, (int, int)>();
+
+            var items = matchingSets.Items.Select(s =>
+            {
+                var dto = s.ToDto();
+                if (countsBulk.TryGetValue(s.Id, out var counts))
+                {
+                    dto.TotalSessionsCount = counts.Item1;
+                    dto.UniqueUsersCount   = counts.Item2;
+                }
+                return dto;
+            }).ToList();
+
             return BaseResponse<TrainingSetPagedResult>.Ok(new TrainingSetPagedResult
             {
-                Items = matchingSets.Items.Select(s => s.ToDto()).ToList(),
+                Items = items,
                 TotalCount = matchingSets.TotalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize

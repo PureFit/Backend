@@ -4,6 +4,7 @@ using Backend.Application.Mappers;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
 using Backend.Core.Entities;
+using Backend.Core.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Backend.Application.Services.impl;
@@ -207,6 +208,39 @@ public class ProfileService : IProfileService
     {
         await _googleTokenRepository.SetActiveAsync(userId, isActive);
         return BaseResponse<bool>.Ok(true);
+    }
+
+    public async Task<BaseResponse<List<WorkloadStatDto>>> GetWorkloadStatsAsync(Guid userId)
+    {
+        try
+        {
+            var userInfo = await _userInfoRepository.GetByUserIdWithStatsAsync(userId);
+            if (userInfo is null)
+                return BaseResponse<List<WorkloadStatDto>>.Fail(ErrorEnums.UserNotFound);
+
+            var muscleTotal    = userInfo.WorkloadStats.Where(s => s.Category == WorkloadStatCategory.Muscle).Sum(s => s.AccumulatedVolume);
+            var bodyPartTotal  = userInfo.WorkloadStats.Where(s => s.Category == WorkloadStatCategory.BodyPart).Sum(s => s.AccumulatedVolume);
+
+            var result = userInfo.WorkloadStats.Select(s =>
+            {
+                var total = s.Category == WorkloadStatCategory.Muscle ? muscleTotal : bodyPartTotal;
+                return new WorkloadStatDto
+                {
+                    Name           = s.Name,
+                    Category       = s.Category.ToString(),
+                    Percent        = total > 0 ? s.AccumulatedVolume / total * 100f : 0f,
+                    SessionCount   = s.SessionCount,
+                    LastUpdatedAt  = s.LastUpdatedAt
+                };
+            }).ToList();
+
+            return BaseResponse<List<WorkloadStatDto>>.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get workload stats for UserId: {UserId}", userId);
+            return BaseResponse<List<WorkloadStatDto>>.Fail(ErrorEnums.UnknownError);
+        }
     }
 
     public async Task<BaseResponse<ProfileDto>> GetProfileAsync(Guid userId)

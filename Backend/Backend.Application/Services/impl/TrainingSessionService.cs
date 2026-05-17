@@ -1,6 +1,7 @@
 using Backend.Application.Common;
 using Backend.Application.DTOs.Session;
 using Backend.Application.Repositories;
+using Backend.Core.Entities;
 using Backend.Core.Entities.TrainingRelated;
 using Backend.Core.Enums;
 using Microsoft.Extensions.Logging;
@@ -12,17 +13,20 @@ public class TrainingSessionService : ITrainingSessionService
     private readonly ITrainingSessionRepository _sessionRepo;
     private readonly ITrainingSetRepository _setRepo;
     private readonly IUserInfoRepository _userInfoRepo;
+    private readonly IMuscleCalculatorService _muscleCalculator;
     private readonly ILogger<TrainingSessionService> _logger;
 
     public TrainingSessionService(
         ITrainingSessionRepository sessionRepo,
         ITrainingSetRepository setRepo,
         IUserInfoRepository userInfoRepo,
+        IMuscleCalculatorService muscleCalculator,
         ILogger<TrainingSessionService> logger)
     {
         _sessionRepo = sessionRepo;
         _setRepo = setRepo;
         _userInfoRepo = userInfoRepo;
+        _muscleCalculator = muscleCalculator;
         _logger = logger;
     }
 
@@ -94,6 +98,8 @@ public class TrainingSessionService : ITrainingSessionService
             await _sessionRepo.UpdateAsync(session);
             _logger.LogInformation("Session {SessionId} completed for user {UserId}", sessionId, userId);
 
+            await UpdateWorkloadStatsAsync(userId, session.TrainingSetId);
+
             var setName = session.TrainingSet?.Name ?? "";
             return BaseResponse<TrainingSessionDto>.Ok(ToDto(session, setName));
         }
@@ -137,7 +143,23 @@ public class TrainingSessionService : ITrainingSessionService
 
     public async Task<BaseResponse<TrainingSessionDto>> GetByIdAsync(Guid userId, Guid sessionId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var userInfo = await _userInfoRepo.GetByUserIdAsync(userId);
+            if (userInfo is null)
+                return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.UserNotFound);
+
+            var session = await _sessionRepo.GetByIdAsync(sessionId, userInfo.Id);
+            if (session is null)
+                return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.SessionNotFound);
+
+            return BaseResponse<TrainingSessionDto>.Ok(ToDto(session, session.TrainingSet?.Name ?? ""));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting session {SessionId}", sessionId);
+            return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.UnknownError);
+        }
     }
 
     public async Task<BaseResponse<SessionHistoryResponse>> GetHistoryAsync(Guid userId, int page, int pageSize)
@@ -162,6 +184,51 @@ public class TrainingSessionService : ITrainingSessionService
         {
             _logger.LogError(ex, "Error getting history for user {UserId}", userId);
             return BaseResponse<SessionHistoryResponse>.Fail(ErrorEnums.UnknownError);
+        }
+    }
+
+    private async Task UpdateWorkloadStatsAsync(Guid userId, Guid? trainingSetId)
+    {
+        if (trainingSetId is null) return;
+
+        var userInfo = await _userInfoRepo.GetByUserIdWithStatsAsync(userId);
+        if (userInfo is null) return;
+
+        var result = await _muscleCalculator.CalculateRawVolumeForSetAsync(trainingSetId.Value, (float)userInfo.WeightKg);
+        if (!result.Success) return;
+
+        var now = DateTime.UtcNow;
+
+        foreach (var (name, vol) in result.Data.MuscleVolumes)
+            UpsertStat(userInfo, name, WorkloadStatCategory.Muscle, vol, now);
+
+        foreach (var (name, vol) in result.Data.BodyPartVolumes)
+            UpsertStat(userInfo, name, WorkloadStatCategory.BodyPart, vol, now);
+
+        await _userInfoRepo.UpdateAsync(userInfo);
+    }
+
+    private static void UpsertStat(UserInfo userInfo, string name, WorkloadStatCategory category, float volume, DateTime now)
+    {
+        var stat = userInfo.WorkloadStats.FirstOrDefault(s => s.Name == name && s.Category == category);
+        if (stat is null)
+        {
+            userInfo.WorkloadStats.Add(new UserWorkloadStat
+            {
+                Id = Guid.NewGuid(),
+                UserInfoId = userInfo.Id,
+                Name = name,
+                Category = category,
+                AccumulatedVolume = volume,
+                SessionCount = 1,
+                LastUpdatedAt = now
+            });
+        }
+        else
+        {
+            stat.AccumulatedVolume += volume;
+            stat.SessionCount++;
+            stat.LastUpdatedAt = now;
         }
     }
 

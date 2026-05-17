@@ -167,4 +167,24 @@ public class TrainingSetRepository : ITrainingSetRepository
         var unique = await sessions.Select(s => s.UserInfoId).Distinct().CountAsync();
         return (total, unique);
     }
+
+    public async Task<Dictionary<Guid, (int TotalSessions, int UniqueUsers)>> GetSessionCountsBulkAsync(IEnumerable<Guid> setIds)
+    {
+        var ids = setIds.ToList();
+        var grouped = await _db.TrainingSessions
+            .Where(s => s.TrainingSetId.HasValue && ids.Contains(s.TrainingSetId.Value) && s.Status == Core.Enums.SessionStatus.Completed)
+            .GroupBy(s => s.TrainingSetId!.Value)
+            .Select(g => new
+            {
+                SetId = g.Key,
+                Total = g.Count(),
+                Unique = g.Select(s => s.UserInfoId).Distinct().Count()
+            })
+            .ToListAsync();
+
+        return grouped.ToDictionary(
+            g => g.SetId,
+            g => (g.Total, g.Unique)
+        );
+    }
 }
