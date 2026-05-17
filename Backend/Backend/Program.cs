@@ -25,7 +25,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddOpenApi();
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -91,6 +95,8 @@ builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationServi
 builder.Services.AddScoped<ITrainingSetRepository, TrainingSetRepository>();
 builder.Services.AddScoped<ITrainingSetService, TrainingSetService>();
 builder.Services.AddScoped<IMuscleCalculatorService, MuscleCalculatorService>();
+builder.Services.AddScoped<ITrainingSessionRepository, TrainingSessionRepository>();
+builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 
 builder.Services.Configure<GroqSettings>(builder.Configuration.GetSection("GroqSettings"));
 builder.Services.AddHttpClient<IAIClient, GroqClient>();

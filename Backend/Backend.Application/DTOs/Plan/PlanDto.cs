@@ -31,6 +31,7 @@ public class PlanTrainingDto
     public string StartPlannedDate { get; set; } = null!;
     public TrainingSetSummaryDto? TrainingSet { get; set; }
     public bool IsCompleted { get; set; }
+    public Guid? CompletedSessionId { get; set; }
 }
 
 public class TrainingSetSummaryDto

@@ -10,4 +10,9 @@ public interface IPlanService
     Task<BaseResponse<bool>> CreatePlanAsync(Guid userId, CreatePlanRequest request);
     Task<BaseResponse<bool>> DeletePlanAsync(Guid userId);
     Task<BaseResponse<bool>> RescheduleTrainingAsync(Guid userId, Guid trainingId, DateTime newStartDate);
+
+    /// <summary>
+    /// Есть ли хотя бы одна завершённая тренировка по данному сету от этого юзера.
+    /// </summary>
+    Task<BaseResponse<bool>> HasCompletedSessionForSetAsync(Guid userId, Guid trainingSetId);
 }
