@@ -1,4 +1,5 @@
 using Backend.Core.Entities;
+using Backend.Core.Entities.AchievementRelated;
 using Backend.Core.Entities.ExerciseRelated;
 using Backend.Core.Entities.TrainingRelated;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ExerciseInterval> ExerciseIntervals { get; set; }
     public DbSet<ExternalTraining> ExternalTrainings { get; set; }
     public DbSet<UserWorkloadStat> UserWorkloadStats { get; set; }
+    public DbSet<Achievement> Achievements { get; set; }
+    public DbSet<UserAchievement> UserAchievements { get; set; }
 
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<ExerciseType> ExerciseTypes { get; set; }

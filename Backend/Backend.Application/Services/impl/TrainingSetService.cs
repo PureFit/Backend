@@ -2,6 +2,7 @@ using Backend.Application.Common;
 using Backend.Application.DTOs.TrainingSet;
 using Backend.Application.Mappers;
 using Backend.Application.Repositories;
+using Backend.Application.Services;
 using Backend.Core.Entities.TrainingRelated;
 using Backend.Core.Enums;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class TrainingSetService : ITrainingSetService
     private readonly IUserInfoRepository _userInfoRepository;
     private readonly IExerciseRepository _exerciseRepository;
     private readonly IMuscleCalculatorService _muscleCalculator;
+    private readonly IAchievementService _achievementService;
     private readonly ILogger<TrainingSetService> _logger;
 
     public TrainingSetService(
@@ -21,12 +23,14 @@ public class TrainingSetService : ITrainingSetService
         IUserInfoRepository userInfoRepository,
         IExerciseRepository exerciseRepository,
         IMuscleCalculatorService muscleCalculator,
+        IAchievementService achievementService,
         ILogger<TrainingSetService> logger)
     {
         _repo = repo;
         _userInfoRepository = userInfoRepository;
         _exerciseRepository = exerciseRepository;
         _muscleCalculator = muscleCalculator;
+        _achievementService = achievementService;
         _logger = logger;
     }
 
@@ -145,6 +149,7 @@ public class TrainingSetService : ITrainingSetService
             };
 
             await _repo.AddAsync(set);
+            await _achievementService.CheckAndGrantAsync(request.UserId, AchievementType.CreateFirstSet);
             return BaseResponse<bool>.Ok(true);
         }
         catch (Exception ex)

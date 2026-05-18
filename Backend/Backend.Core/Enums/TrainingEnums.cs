@@ -66,6 +66,15 @@ public enum WorkloadStatCategory
     BodyPart
 }
 
+public enum AchievementType
+{
+    CreateFirstSet,       // создал первый сет
+    CreatePlan,           // создал план
+    FinishPlanTraining,   // выполнил N треш с плана
+    FinishPlanWeek,       // завершил N недель плана
+    MuscleRawVolume       // накопил X объёма по мышце
+}
+
 public enum SessionStatus
 {
     InProgress,

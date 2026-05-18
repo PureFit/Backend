@@ -2,10 +2,12 @@ using Backend.Application.Common;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
 using Backend.Application.Services.impl;
+using Backend.Hubs;
 using Backend.Infrastructure.Persistence;
 using Backend.Infrastructure.Repositories;
 using Backend.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
@@ -47,6 +49,9 @@ builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("RedisC
 builder.Services.Configure<MuscleCalculatorConfig>(builder.Configuration.GetSection("MuscleCalculatorConfig"));
 builder.Services.Configure<ExerciseParameterConfig>(builder.Configuration.GetSection("ExerciseParameterConfig"));
 
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, SidUserIdProvider>();
+
 var redisConnectionString = builder.Configuration["RedisConfig:ConnectionString"]!;
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -56,6 +61,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -69,6 +75,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSection["SecretKey"]!))
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/achievements"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddHttpClient();
@@ -108,6 +128,11 @@ builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanScheduler, PlanScheduler>();
 builder.Services.AddScoped<IPlanService, PlanService>();
 
+builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
+builder.Services.AddScoped<IAchievementService, AchievementService>();
+
+builder.Services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -116,9 +141,11 @@ if (app.Environment.IsDevelopment())
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<AchievementHub>("/hubs/achievements");
 
 app.Run();

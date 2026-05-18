@@ -34,7 +34,9 @@ public class UserInfoRepository : IUserInfoRepository
 
     public async Task UpdateAsync(UserInfo userInfo)
     {
-        _dbContext.UserInfos.Update(userInfo);
+        if (_dbContext.Entry(userInfo).State == EntityState.Detached)
+            _dbContext.UserInfos.Update(userInfo);
+
         await _dbContext.SaveChangesAsync();
     }
 }
