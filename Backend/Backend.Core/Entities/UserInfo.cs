@@ -1,3 +1,4 @@
+using Backend.Core.Entities.AchievementRelated;
 using Backend.Core.Entities.TrainingRelated;
 
 namespace Backend.Core.Entities
@@ -17,6 +18,7 @@ namespace Backend.Core.Entities
         /// Включает как плановые, так и свободные тренировки.
         /// </summary>
         public List<UserWorkloadStat> WorkloadStats { get; set; } = [];
+        public List<UserAchievement> UserAchievements { get; set; } = [];
 
         public Guid? CurrentPlanId { get; set; }
         public AIPlan? CurrentPlan { get; set; }

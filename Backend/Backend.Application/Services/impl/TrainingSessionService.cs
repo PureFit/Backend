@@ -1,6 +1,7 @@
 using Backend.Application.Common;
 using Backend.Application.DTOs.Session;
 using Backend.Application.Repositories;
+using Backend.Application.Services;
 using Backend.Core.Entities;
 using Backend.Core.Entities.TrainingRelated;
 using Backend.Core.Enums;
@@ -14,6 +15,7 @@ public class TrainingSessionService : ITrainingSessionService
     private readonly ITrainingSetRepository _setRepo;
     private readonly IUserInfoRepository _userInfoRepo;
     private readonly IMuscleCalculatorService _muscleCalculator;
+    private readonly IAchievementService _achievementService;
     private readonly ILogger<TrainingSessionService> _logger;
 
     public TrainingSessionService(
@@ -21,12 +23,14 @@ public class TrainingSessionService : ITrainingSessionService
         ITrainingSetRepository setRepo,
         IUserInfoRepository userInfoRepo,
         IMuscleCalculatorService muscleCalculator,
+        IAchievementService achievementService,
         ILogger<TrainingSessionService> logger)
     {
         _sessionRepo = sessionRepo;
         _setRepo = setRepo;
         _userInfoRepo = userInfoRepo;
         _muscleCalculator = muscleCalculator;
+        _achievementService = achievementService;
         _logger = logger;
     }
 
@@ -81,7 +85,7 @@ public class TrainingSessionService : ITrainingSessionService
     {
         try
         {
-            var userInfo = await _userInfoRepo.GetByUserIdAsync(userId);
+            var userInfo = await _userInfoRepo.GetByUserIdWithStatsAsync(userId);
             if (userInfo is null)
                 return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.UserNotFound);
 
@@ -98,7 +102,14 @@ public class TrainingSessionService : ITrainingSessionService
             await _sessionRepo.UpdateAsync(session);
             _logger.LogInformation("Session {SessionId} completed for user {UserId}", sessionId, userId);
 
-            await UpdateWorkloadStatsAsync(userId, session.TrainingSetId);
+            await UpdateWorkloadStatsAsync(userInfo, session.TrainingSetId);
+
+            if (session.PlanTrainingId.HasValue)
+            {
+                await _achievementService.CheckAndGrantAsync(userId, AchievementType.FinishPlanTraining);
+                await _achievementService.CheckAndGrantAsync(userId, AchievementType.FinishPlanWeek);
+            }
+            await _achievementService.CheckAndGrantAsync(userId, AchievementType.MuscleRawVolume);
 
             var setName = session.TrainingSet?.Name ?? "";
             return BaseResponse<TrainingSessionDto>.Ok(ToDto(session, setName));
@@ -187,12 +198,9 @@ public class TrainingSessionService : ITrainingSessionService
         }
     }
 
-    private async Task UpdateWorkloadStatsAsync(Guid userId, Guid? trainingSetId)
+    private async Task UpdateWorkloadStatsAsync(UserInfo userInfo, Guid? trainingSetId)
     {
         if (trainingSetId is null) return;
-
-        var userInfo = await _userInfoRepo.GetByUserIdWithStatsAsync(userId);
-        if (userInfo is null) return;
 
         var result = await _muscleCalculator.CalculateRawVolumeForSetAsync(trainingSetId.Value, (float)userInfo.WeightKg);
         if (!result.Success) return;
@@ -215,7 +223,6 @@ public class TrainingSessionService : ITrainingSessionService
         {
             userInfo.WorkloadStats.Add(new UserWorkloadStat
             {
-                Id = Guid.NewGuid(),
                 UserInfoId = userInfo.Id,
                 Name = name,
                 Category = category,

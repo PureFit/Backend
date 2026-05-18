@@ -1,6 +1,7 @@
 using Backend.Application.Common;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Repositories;
+using Backend.Application.Services;
 using Backend.Core.Entities;
 using Backend.Core.Entities.TrainingRelated;
 using Backend.Core.Enums;
@@ -15,6 +16,7 @@ public class PlanService : IPlanService
     private readonly IPlanGenerator _planGenerator;
     private readonly IPlanScheduler _planScheduler;
     private readonly ICacheService _cacheService;
+    private readonly IAchievementService _achievementService;
     private readonly ILogger<PlanService> _logger;
 
     public PlanService(
@@ -23,6 +25,7 @@ public class PlanService : IPlanService
         IPlanGenerator planGenerator,
         IPlanScheduler planScheduler,
         ICacheService cacheService,
+        IAchievementService achievementService,
         ILogger<PlanService> logger)
     {
         _userInfoRepository = userInfoRepository;
@@ -30,6 +33,7 @@ public class PlanService : IPlanService
         _planGenerator = planGenerator;
         _planScheduler = planScheduler;
         _cacheService = cacheService;
+        _achievementService = achievementService;
         _logger = logger;
     }
 
@@ -67,6 +71,8 @@ public class PlanService : IPlanService
 
         userInfo.CurrentPlanId = plan.Id;
         await _userInfoRepository.UpdateAsync(userInfo);
+
+        await _achievementService.CheckAndGrantAsync(userId, AchievementType.CreatePlan);
 
         return BaseResponse<bool>.Ok(true);
     }
