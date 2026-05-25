@@ -48,4 +48,10 @@ public class AuthRepository : IAuthRepository
 
     public Task<User?> GetByGoogleIdAsync(string googleId) =>
         _dbContext.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId);
+
+    public Task<List<User>> SearchByUsernameAsync(string username, int limit = 20) =>
+        _dbContext.Users
+            .Where(u => u.Username.ToLower().Contains(username.ToLower()))
+            .Take(limit)
+            .ToListAsync();
 }

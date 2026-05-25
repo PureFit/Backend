@@ -435,4 +435,34 @@ public class TrainingSetService : ITrainingSetService
         }
     }
 
+    public async Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId)
+    {
+        try
+        {
+            var sets = await _repo.GetPublicByUserAsync(createdByUserId);
+
+            var ids = sets.Select(s => s.Id).ToList();
+            var countsBulk = ids.Count > 0
+                ? await _repo.GetSessionCountsBulkAsync(ids)
+                : new Dictionary<Guid, (int, int)>();
+
+            var result = sets.Select(s =>
+            {
+                var dto = s.ToDto();
+                if (countsBulk.TryGetValue(s.Id, out var counts))
+                {
+                    dto.TotalSessionsCount = counts.Item1;
+                    dto.UniqueUsersCount   = counts.Item2;
+                }
+                return dto;
+            }).ToList();
+
+            return BaseResponse<List<TrainingSetResponse>>.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetPublicSetsByUserAsync failed for userId={UserId}", createdByUserId);
+            return BaseResponse<List<TrainingSetResponse>>.Fail(ErrorEnums.UnknownError);
+        }
+    }
 }

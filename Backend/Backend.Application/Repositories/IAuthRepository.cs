@@ -11,4 +11,5 @@ public interface IAuthRepository
     Task AddAsync(User user);
     Task UpdateAsync(User user);
     Task<User?> GetByGoogleIdAsync(string googleId);
+    Task<List<User>> SearchByUsernameAsync(string username, int limit = 20);
 }

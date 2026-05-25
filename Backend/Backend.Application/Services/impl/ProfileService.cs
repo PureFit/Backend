@@ -229,6 +229,7 @@ public class ProfileService : IProfileService
                     Name           = s.Name,
                     Category       = s.Category.ToString(),
                     Percent        = total > 0 ? s.AccumulatedVolume / total * 100f : 0f,
+                    RawVolume      = s.AccumulatedVolume,
                     SessionCount   = s.SessionCount,
                     LastUpdatedAt  = s.LastUpdatedAt
                 };

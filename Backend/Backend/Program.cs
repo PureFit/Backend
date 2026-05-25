@@ -131,6 +131,9 @@ builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
 builder.Services.AddScoped<IAchievementService, AchievementService>();
 
+builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+builder.Services.AddScoped<ISocialService, SocialService>();
+
 builder.Services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
 
 var app = builder.Build();

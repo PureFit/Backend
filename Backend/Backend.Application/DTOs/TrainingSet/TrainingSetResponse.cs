@@ -11,6 +11,8 @@ public class TrainingSetResponse
     public string? TrainingType { get; set; }
     public string? BodyPartFocus { get; set; }
     public Guid? CreatedByUserId { get; set; }
+    public string? CreatedByUsername { get; set; }
+    public string? CreatedByAvatarUrl { get; set; }
     public Dictionary<string, float>? MusclePercentages { get; set; }
     public Dictionary<string, float>? BodyPartPercentages { get; set; }
     public int TotalSessionsCount { get; set; }

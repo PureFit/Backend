@@ -19,6 +19,7 @@ public class TrainingSetRepository : ITrainingSetRepository
     public async Task<TrainingSet?> GetByIdAsync(Guid setId)
     {
         return await _db.TrainingSets
+            .Include(s => s.CreatedBy)
             .Include(s => s.SetBlocks.OrderBy(b => b.Order))
                 .ThenInclude(b => b.ExerciseEntries.OrderBy(e => e.Order))
                     .ThenInclude(e => e.Intervals.OrderBy(i => i.Order))
@@ -53,10 +54,9 @@ public class TrainingSetRepository : ITrainingSetRepository
             query = query.Where(s => s.CreatedByUserId == filter.CreatedByUserId.Value &&
                 (s.SetAccessType == SetAccessType.Public || s.CreatedByUserId == userId));
         else
-            // default sets (no owner) are always visible
+            // All tab: base app sets (no owner) + public sets from OTHER users only
             query = query.Where(s => s.CreatedByUserId == null ||
-                s.SetAccessType == SetAccessType.Public ||
-                s.CreatedByUserId == userId);
+                (s.SetAccessType == SetAccessType.Public && s.CreatedByUserId != userId));
 
         if (filter.AccessType.HasValue)
             query = query.Where(s => s.SetAccessType == filter.AccessType.Value);
@@ -80,6 +80,7 @@ public class TrainingSetRepository : ITrainingSetRepository
             .OrderByDescending(s => s.CreatedAt)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
+            .Include(s => s.CreatedBy)
             .Include(s => s.SetBlocks.OrderBy(b => b.Order))
                 .ThenInclude(b => b.ExerciseEntries.OrderBy(e => e.Order))
                     .ThenInclude(e => e.Intervals.OrderBy(i => i.Order))
@@ -105,6 +106,21 @@ public class TrainingSetRepository : ITrainingSetRepository
     {
         _db.TrainingSets.Remove(trainingSet);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<List<TrainingSet>> GetPublicByUserAsync(Guid createdByUserId)
+    {
+        return await _db.TrainingSets
+            .Include(s => s.CreatedBy)
+            .Include(s => s.SetBlocks.OrderBy(b => b.Order))
+                .ThenInclude(b => b.ExerciseEntries.OrderBy(e => e.Order))
+                    .ThenInclude(e => e.Intervals.OrderBy(i => i.Order))
+            .Include(s => s.SetBlocks)
+                .ThenInclude(b => b.ExerciseEntries)
+                    .ThenInclude(e => e.ExerciseType)
+            .Where(s => s.CreatedByUserId == createdByUserId && s.SetAccessType == SetAccessType.Public)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<SetBlock?> GetBlockByIdAsync(Guid blockId)

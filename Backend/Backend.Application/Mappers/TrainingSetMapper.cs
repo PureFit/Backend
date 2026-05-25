@@ -16,6 +16,8 @@ public static class TrainingSetMapper
         TrainingType = set.TrainingType?.ToString(),
         BodyPartFocus = set.BodyPartFocus?.ToString(),
         CreatedByUserId = set.CreatedByUserId,
+        CreatedByUsername = set.CreatedBy?.Username,
+        CreatedByAvatarUrl = set.CreatedBy?.AvatarUrl,
         SetBlocks = set.SetBlocks.Select(b => b.ToDto()).ToList()
     };
 
