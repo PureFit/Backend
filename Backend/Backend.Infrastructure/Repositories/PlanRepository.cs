@@ -44,6 +44,12 @@ public class PlanRepository : IPlanRepository
 
     public async Task DeleteAsync(AIPlan plan)
     {
+        if (plan.CurrentWeekId != null)
+        {
+            plan.CurrentWeekId = null;
+            await _dbContext.SaveChangesAsync();
+        }
+
         _dbContext.AiPlans.Remove(plan);
         await _dbContext.SaveChangesAsync();
     }

@@ -17,5 +17,8 @@ public class TrainingSetResponse
     public Dictionary<string, float>? BodyPartPercentages { get; set; }
     public int TotalSessionsCount { get; set; }
     public int UniqueUsersCount { get; set; }
+    public int LikesCount { get; set; }
+    public int DislikesCount { get; set; }
+    public string? UserVote { get; set; }
     public List<SetBlockResponse> SetBlocks { get; set; } = [];
 }

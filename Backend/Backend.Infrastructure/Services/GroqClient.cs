@@ -4,6 +4,7 @@ using Backend.Application.Services;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace Backend.Infrastructure.Services;
 
@@ -11,11 +12,13 @@ public class GroqClient : IAIClient
 {
     private readonly HttpClient _http;
     private readonly GroqSettings _settings;
+    private readonly GroqLogger _logger;
 
-    public GroqClient(HttpClient httpClient, IOptions<GroqSettings> options)
+    public GroqClient(HttpClient httpClient, IOptions<GroqSettings> options, GroqLogger groqLogger)
     {
         _http = httpClient;
         _settings = options.Value;
+        _logger = groqLogger;
     }
 
     public async Task<string> SendAsync(AIPrompt prompt)
@@ -24,6 +27,7 @@ public class GroqClient : IAIClient
         {
             Model = _settings.Model,
             Temperature = _settings.Temperature,
+            MaxTokens = _settings.MaxTokens,
             Messages =
             [
                 new() { Role = "system", Content = prompt.SystemMessage },
@@ -39,6 +43,9 @@ public class GroqClient : IAIClient
             request.Headers.Add("Authorization", $"Bearer {_settings.ApiKey}");
             request.Content = JsonContent.Create(body);
 
+            if (attempt == 0)
+                await _logger.LogRequestAsync(prompt.SystemMessage, prompt.UserMessage);
+
             var response = await _http.SendAsync(request);
 
             if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt < delays.Length)
@@ -49,7 +56,10 @@ public class GroqClient : IAIClient
 
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<GroqResponse>()
+            var rawJson = await response.Content.ReadAsStringAsync();
+            await _logger.LogResponseAsync(rawJson);
+
+            var result = JsonSerializer.Deserialize<GroqResponse>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                 ?? throw new InvalidOperationException("Empty response from Groq");
 
             return result.Choices[0].Message.Content;

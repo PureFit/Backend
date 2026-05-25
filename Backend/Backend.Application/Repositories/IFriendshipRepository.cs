@@ -9,6 +9,7 @@ public interface IFriendshipRepository
     Task<UserFriendship?> GetByIdAsync(Guid friendshipId);
     Task<List<UserFriendship>> GetFriendsAsync(Guid userId);
     Task<List<UserFriendship>> GetPendingRequestsAsync(Guid addresseeId);
+    Task<List<UserFriendship>> GetOutgoingRequestsAsync(Guid requesterId);
     Task AddAsync(UserFriendship friendship);
     Task UpdateAsync(UserFriendship friendship);
     Task DeleteAsync(UserFriendship friendship);

@@ -53,6 +53,9 @@ public class TrainingSetRepository : ITrainingSetRepository
         else if (filter.CreatedByUserId.HasValue)
             query = query.Where(s => s.CreatedByUserId == filter.CreatedByUserId.Value &&
                 (s.SetAccessType == SetAccessType.Public || s.CreatedByUserId == userId));
+        else if (filter.SortByPopularity)
+            // Popular tab: all public sets including own
+            query = query.Where(s => s.SetAccessType == SetAccessType.Public);
         else
             // All tab: base app sets (no owner) + public sets from OTHER users only
             query = query.Where(s => s.CreatedByUserId == null ||
@@ -76,8 +79,11 @@ public class TrainingSetRepository : ITrainingSetRepository
 
         var totalCount = await query.CountAsync();
 
-        var defaultItems = await query
-            .OrderByDescending(s => s.CreatedAt)
+        IQueryable<TrainingSet> ordered = filter.SortByPopularity
+            ? query.OrderByDescending(s => _db.SetLikes.Count(l => l.TrainingSetId == s.Id && l.IsLike))
+            : query.OrderByDescending(s => s.CreatedAt);
+
+        var defaultItems = await ordered
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Include(s => s.CreatedBy)

@@ -10,8 +10,12 @@ public static class PromptConstants
         Rules:
         - CRITICAL: Use ONLY exercise IDs from the catalog below. Never invent or guess IDs. If unsure, pick the closest match from the catalog.
         - Match equipment to what the user has available
-        - Respect the session duration and frequency constraints
-        - Structure the plan with progressive overload across weeks
+        - CRITICAL: Fill the entire session duration. A 60-min session needs ~4-6 blocks; a 90-min session needs ~5-8 blocks. Each block must have 2-4 exercises.
+        - Every session must start with a warm-up block (5-10 min) and end with a cooldown/stretch block (5-10 min).
+        - Main working blocks must target the session's primary muscle groups with sufficient volume (3-5 sets, 6-15 reps).
+        - Vary exercises — do not repeat the same exercise twice in one session.
+        - estimatedDurationMinutes in the JSON must match the requested session duration exactly.
+        - Structure the plan with progressive overload across weeks (increase weight, reps, or sets each week)
         - Return ONLY valid JSON matching the schema below, no extra text
 
         Response JSON schema:
@@ -38,7 +42,7 @@ public static class PromptConstants
                       "exercises": [
                         {
                           "order": 1,
-                          "exerciseId": "uuid",
+                          "exerciseId": 1,
                           "reps": 10,
                           "durationSeconds": null,
                           "distanceMeters": null,

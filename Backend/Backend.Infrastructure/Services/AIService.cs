@@ -31,7 +31,27 @@ public class AIService : IAIService
 
         var json = ExtractJson(response);
 
+        if (prompt.ExerciseIndexMap.Count > 0)
+            json = ResolveExerciseIndices(json, prompt.ExerciseIndexMap);
+
         return JsonSerializer.Deserialize<PlanFullDto>(json, _jsonOptions) ?? throw new InvalidOperationException("AI returned empty plan");
+    }
+
+    // AI returns exerciseId as an integer index (1, 2, 3...) — map back to real UUIDs.
+    // Process in descending order to avoid replacing "1" inside "10", "11", etc.
+    private static string ResolveExerciseIndices(string json, Dictionary<int, Guid> map)
+    {
+        foreach (var (idx, guid) in map.OrderByDescending(x => x.Key))
+        {
+            var uuidJson = $"\"exerciseId\":\"{guid}\"";
+            // number form (with and without space after colon)
+            json = json.Replace($"\"exerciseId\":{idx}", uuidJson);
+            json = json.Replace($"\"exerciseId\": {idx}", uuidJson);
+            // string form (AI sometimes wraps in quotes)
+            json = json.Replace($"\"exerciseId\":\"{idx}\"", uuidJson);
+            json = json.Replace($"\"exerciseId\": \"{idx}\"", uuidJson);
+        }
+        return json;
     }
 
     private static string ExtractJson(string response)

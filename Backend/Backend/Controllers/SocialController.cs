@@ -36,6 +36,20 @@ public class SocialController : BaseController
         return result.Success ? Ok(result) : HandleError(result);
     }
 
+    [HttpGet("friends/requests/sent")]
+    public async Task<IActionResult> GetOutgoingRequests()
+    {
+        var result = await _social.GetOutgoingRequestsAsync(GetUserIdFromClaims());
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
+    [HttpPost("friends/cancel/{friendshipId}")]
+    public async Task<IActionResult> CancelRequest(Guid friendshipId)
+    {
+        var result = await _social.CancelFriendRequestAsync(GetUserIdFromClaims(), friendshipId);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
     [HttpPost("friends/accept/{friendshipId}")]
     public async Task<IActionResult> AcceptRequest(Guid friendshipId)
     {

@@ -4,7 +4,7 @@ namespace Backend.Infrastructure.Helpers;
 
 internal static class TrainingSlotHelper
 {
-    private static readonly TimeOnly WorkdayStart = new(7, 0);
+    private static readonly TimeOnly WorkdayStart = new(9, 0);
     private static readonly TimeOnly WorkdayEnd = new(22, 0);
 
     public static List<DateTime> FindTrainingSlots(
@@ -100,18 +100,18 @@ internal static class TrainingSlotHelper
     }
 
     // 1 → середина недели
-    // 2 → Вт/Сб (разрыв 4 дня)
-    // 3 → Вт/Чт/Сб (разрыв 2 дня)
+    // 2 → Пн/Чт (разрыв 3 дня)
+    // 3 → Пн/Ср/Пт (классический сплит)
     // 4 → Пн/Ср/Пт/Вс (через день)
-    // 5 → Пн/Вт/Чт/Сб/Вс (отдых Ср)
+    // 5 → Пн/Вт/Ср/Пт/Сб (отдых Чт/Вс)
     // 6 → Пн-Сб (отдых Вс)
     private static int[] GetIdealOffsets(int count) => count switch
     {
-        1 => [3],
-        2 => [1, 5],
-        3 => [1, 3, 5],
+        1 => [2],
+        2 => [0, 3],
+        3 => [0, 2, 4],
         4 => [0, 2, 4, 6],
-        5 => [0, 1, 3, 5, 6],
+        5 => [0, 1, 2, 4, 5],
         6 => [0, 1, 2, 3, 4, 5],
         _ => [0, 1, 2, 3, 4, 5, 6]
     };

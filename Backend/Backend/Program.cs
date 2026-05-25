@@ -113,6 +113,7 @@ builder.Services.AddScoped<ISvgManipulationService, SvgManipulationService>();
 builder.Services.AddScoped<IMuscleVisualizationService, MuscleVisualizationService>();
 
 builder.Services.AddScoped<ITrainingSetRepository, TrainingSetRepository>();
+builder.Services.AddScoped<ISetLikeRepository, SetLikeRepository>();
 builder.Services.AddScoped<ITrainingSetService, TrainingSetService>();
 builder.Services.AddScoped<IMuscleCalculatorService, MuscleCalculatorService>();
 builder.Services.AddScoped<ITrainingSessionRepository, TrainingSessionRepository>();
@@ -120,6 +121,8 @@ builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 
 builder.Services.Configure<GroqSettings>(builder.Configuration.GetSection("GroqSettings"));
 builder.Services.AddHttpClient<IAIClient, GroqClient>();
+builder.Services.AddSingleton<GroqLogger>();
+
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<ICorePromptEnricher, CorePromptEnricher>();

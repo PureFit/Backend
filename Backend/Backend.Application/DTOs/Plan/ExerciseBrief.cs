@@ -1,4 +1,4 @@
-namespace Backend.Application.DTOs.Plan;
+﻿namespace Backend.Application.DTOs.Plan;
 
 /// <summary>
 /// Компактное представление упражнения для AI промпта.
@@ -16,7 +16,7 @@ public class ExerciseBrief
     public List<ExerciseTypeBrief> Types { get; set; } = [];
 
     public string ToCompactString() =>
-        $"{Id}|{Name}|{string.Join(",", BodyParts)}|{string.Join(",", Muscles)}|{string.Join(",", Equipment)}|{string.Join(",", Types.Select(t => t.Measure))}";
+        $"{Id}|{Name}|{string.Join(",", Equipment)}|{string.Join(",", Types.Select(t => t.Measure))}";
 }
 
 public class ExerciseTypeBrief

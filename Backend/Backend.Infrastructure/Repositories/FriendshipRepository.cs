@@ -47,6 +47,14 @@ public class FriendshipRepository : IFriendshipRepository
             .ToListAsync();
     }
 
+    public async Task<List<UserFriendship>> GetOutgoingRequestsAsync(Guid requesterId)
+    {
+        return await _db.UserFriendships
+            .Include(f => f.Addressee)
+            .Where(f => f.Status == FriendshipStatus.Pending && f.RequesterId == requesterId)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(UserFriendship friendship)
     {
         _db.UserFriendships.Add(friendship);

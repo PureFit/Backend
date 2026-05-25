@@ -16,6 +16,7 @@ public class TrainingSetService : ITrainingSetService
     private readonly IExerciseRepository _exerciseRepository;
     private readonly IMuscleCalculatorService _muscleCalculator;
     private readonly IAchievementService _achievementService;
+    private readonly ISetLikeRepository _likeRepo;
     private readonly ILogger<TrainingSetService> _logger;
 
     public TrainingSetService(
@@ -24,6 +25,7 @@ public class TrainingSetService : ITrainingSetService
         IExerciseRepository exerciseRepository,
         IMuscleCalculatorService muscleCalculator,
         IAchievementService achievementService,
+        ISetLikeRepository likeRepo,
         ILogger<TrainingSetService> logger)
     {
         _repo = repo;
@@ -31,6 +33,7 @@ public class TrainingSetService : ITrainingSetService
         _exerciseRepository = exerciseRepository;
         _muscleCalculator = muscleCalculator;
         _achievementService = achievementService;
+        _likeRepo = likeRepo;
         _logger = logger;
     }
 
@@ -70,6 +73,12 @@ public class TrainingSetService : ITrainingSetService
             dto.TotalSessionsCount = totalSessions;
             dto.UniqueUsersCount = uniqueUsers;
 
+            var (likes, dislikes) = await _likeRepo.GetCountsAsync(setId);
+            dto.LikesCount = likes;
+            dto.DislikesCount = dislikes;
+            var userVote = await _likeRepo.GetBySetAndUserAsync(setId, userId);
+            dto.UserVote = userVote is null ? null : userVote.IsLike ? "Like" : "Dislike";
+
             var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);
             if (userInfo is not null)
             {
@@ -96,6 +105,8 @@ public class TrainingSetService : ITrainingSetService
         {
             var matchingSets = await _repo.GetByFilterAsync(filter, userId);
 
+            var allIds = matchingSets.Items.Select(s => s.Id).ToList();
+
             var publicIds = matchingSets.Items
                 .Where(s => s.SetAccessType == Core.Enums.SetAccessType.Public)
                 .Select(s => s.Id)
@@ -105,6 +116,13 @@ public class TrainingSetService : ITrainingSetService
                 ? await _repo.GetSessionCountsBulkAsync(publicIds)
                 : new Dictionary<Guid, (int, int)>();
 
+            Dictionary<Guid, (int Likes, int Dislikes)> likesBulk = allIds.Count > 0
+                ? await _likeRepo.GetCountsBulkAsync(allIds)
+                : new Dictionary<Guid, (int Likes, int Dislikes)>();
+            Dictionary<Guid, bool?> votesBulk = allIds.Count > 0
+                ? await _likeRepo.GetUserVotesBulkAsync(userId, allIds)
+                : new Dictionary<Guid, bool?>();
+
             var items = matchingSets.Items.Select(s =>
             {
                 var dto = s.ToDto();
@@ -113,6 +131,13 @@ public class TrainingSetService : ITrainingSetService
                     dto.TotalSessionsCount = counts.Item1;
                     dto.UniqueUsersCount   = counts.Item2;
                 }
+                if (likesBulk.TryGetValue(s.Id, out var lc))
+                {
+                    dto.LikesCount    = lc.Likes;
+                    dto.DislikesCount = lc.Dislikes;
+                }
+                if (votesBulk.TryGetValue(s.Id, out var vote))
+                    dto.UserVote = vote.HasValue ? (vote.Value ? "Like" : "Dislike") : null;
                 return dto;
             }).ToList();
 
@@ -435,16 +460,22 @@ public class TrainingSetService : ITrainingSetService
         }
     }
 
-    public async Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId)
+    public async Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId, Guid currentUserId)
     {
         try
         {
             var sets = await _repo.GetPublicByUserAsync(createdByUserId);
-
             var ids = sets.Select(s => s.Id).ToList();
+
             var countsBulk = ids.Count > 0
                 ? await _repo.GetSessionCountsBulkAsync(ids)
                 : new Dictionary<Guid, (int, int)>();
+            Dictionary<Guid, (int Likes, int Dislikes)> likesBulk = ids.Count > 0
+                ? await _likeRepo.GetCountsBulkAsync(ids)
+                : new Dictionary<Guid, (int Likes, int Dislikes)>();
+            Dictionary<Guid, bool?> votesBulk = ids.Count > 0
+                ? await _likeRepo.GetUserVotesBulkAsync(currentUserId, ids)
+                : new Dictionary<Guid, bool?>();
 
             var result = sets.Select(s =>
             {
@@ -454,6 +485,13 @@ public class TrainingSetService : ITrainingSetService
                     dto.TotalSessionsCount = counts.Item1;
                     dto.UniqueUsersCount   = counts.Item2;
                 }
+                if (likesBulk.TryGetValue(s.Id, out var lc))
+                {
+                    dto.LikesCount    = lc.Likes;
+                    dto.DislikesCount = lc.Dislikes;
+                }
+                if (votesBulk.TryGetValue(s.Id, out var vote))
+                    dto.UserVote = vote.HasValue ? (vote.Value ? "Like" : "Dislike") : null;
                 return dto;
             }).ToList();
 
@@ -463,6 +501,65 @@ public class TrainingSetService : ITrainingSetService
         {
             _logger.LogError(ex, "GetPublicSetsByUserAsync failed for userId={UserId}", createdByUserId);
             return BaseResponse<List<TrainingSetResponse>>.Fail(ErrorEnums.UnknownError);
+        }
+    }
+
+    public async Task<BaseResponse<bool>> VoteSetAsync(Guid setId, Guid userId, bool isLike)
+    {
+        try
+        {
+            var set = await _repo.GetByIdAsync(setId);
+            if (set is null)
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
+            if (set.SetAccessType == SetAccessType.Private && set.CreatedByUserId != userId)
+                return BaseResponse<bool>.Fail(ErrorEnums.Forbidden);
+
+            var existing = await _likeRepo.GetBySetAndUserAsync(setId, userId);
+            if (existing is null)
+            {
+                await _likeRepo.AddAsync(new SetLike
+                {
+                    Id = Guid.NewGuid(),
+                    TrainingSetId = setId,
+                    UserId = userId,
+                    IsLike = isLike,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else if (existing.IsLike == isLike)
+            {
+                await _likeRepo.DeleteAsync(existing);
+            }
+            else
+            {
+                existing.IsLike = isLike;
+                await _likeRepo.UpdateAsync(existing);
+            }
+
+            return BaseResponse<bool>.Ok(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "VoteSetAsync failed for SetId={SetId}", setId);
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
+        }
+    }
+
+    public async Task<BaseResponse<bool>> UnvoteSetAsync(Guid setId, Guid userId)
+    {
+        try
+        {
+            var existing = await _likeRepo.GetBySetAndUserAsync(setId, userId);
+            if (existing is null)
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
+
+            await _likeRepo.DeleteAsync(existing);
+            return BaseResponse<bool>.Ok(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UnvoteSetAsync failed for SetId={SetId}", setId);
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
 }

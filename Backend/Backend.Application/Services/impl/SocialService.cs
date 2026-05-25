@@ -77,6 +77,47 @@ public class SocialService : ISocialService
         }
     }
 
+    public async Task<BaseResponse<List<SentFriendRequestDto>>> GetOutgoingRequestsAsync(Guid userId)
+    {
+        try
+        {
+            var requests = await _friendshipRepo.GetOutgoingRequestsAsync(userId);
+            var result = requests.Select(f => new SentFriendRequestDto
+            {
+                FriendshipId = f.Id,
+                AddresseeId = f.AddresseeId,
+                AddresseeUsername = f.Addressee.Username,
+                AddresseeAvatarUrl = f.Addressee.AvatarUrl,
+                CreatedAt = f.CreatedAt
+            }).ToList();
+            return BaseResponse<List<SentFriendRequestDto>>.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetOutgoingRequestsAsync failed for {UserId}", userId);
+            return BaseResponse<List<SentFriendRequestDto>>.Fail(ErrorEnums.UnknownError);
+        }
+    }
+
+    public async Task<BaseResponse<bool>> CancelFriendRequestAsync(Guid userId, Guid friendshipId)
+    {
+        try
+        {
+            var friendship = await _friendshipRepo.GetByIdAsync(friendshipId);
+            if (friendship is null || friendship.RequesterId != userId)
+                return BaseResponse<bool>.Fail(ErrorEnums.NotFound);
+            if (friendship.Status != FriendshipStatus.Pending)
+                return BaseResponse<bool>.Fail(ErrorEnums.ValidationError);
+            await _friendshipRepo.DeleteAsync(friendship);
+            return BaseResponse<bool>.Ok(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CancelFriendRequestAsync failed for {FriendshipId}", friendshipId);
+            return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
+        }
+    }
+
     public async Task<BaseResponse<bool>> SendFriendRequestAsync(Guid requesterId, Guid addresseeId)
     {
         try
@@ -86,7 +127,16 @@ public class SocialService : ISocialService
 
             var existing = await _friendshipRepo.GetAsync(requesterId, addresseeId);
             if (existing is not null)
+            {
+                // Если другой пользователь уже прислал нам запрос — автоматически принимаем
+                if (existing.Status == FriendshipStatus.Pending && existing.RequesterId == addresseeId)
+                {
+                    existing.Status = FriendshipStatus.Accepted;
+                    await _friendshipRepo.UpdateAsync(existing);
+                    return BaseResponse<bool>.Ok(true);
+                }
                 return BaseResponse<bool>.Fail(ErrorEnums.ValidationError);
+            }
 
             var addressee = await _authRepo.GetByIdAsync(addresseeId);
             if (addressee is null)
@@ -277,7 +327,7 @@ public class SocialService : ISocialService
                 }).ToList();
             }
 
-            var setsResult = await _setService.GetPublicSetsByUserAsync(targetUserId);
+            var setsResult = await _setService.GetPublicSetsByUserAsync(targetUserId, currentUserId);
             var publicSets = setsResult.Success ? setsResult.Data ?? [] : [];
 
             var friendship = await _friendshipRepo.GetAsync(currentUserId, targetUserId);

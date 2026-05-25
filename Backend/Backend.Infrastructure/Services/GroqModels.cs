@@ -13,6 +13,9 @@ internal class GroqRequest
     [JsonPropertyName("temperature")]
     public float Temperature { get; set; }
 
+    [JsonPropertyName("max_tokens")]
+    public int MaxTokens { get; set; } = 32768;
+
     [JsonPropertyName("response_format")]
     public GroqResponseFormat ResponseFormat { get; set; } = new();
 }
