@@ -19,5 +19,7 @@ public interface ITrainingSetService
     Task<BaseResponse<bool>> AddExerciseEntryToSetBlock(AddExerciseEntryToSetBlockRequest request);
     Task<BaseResponse<bool>> UpdateSetBlockExerciseEntry(UpdateSetBlockExerciseEntryRequest request, Guid userId);
     Task<BaseResponse<bool>> DeleteExerciseEntry(Guid entryId, Guid userId);
-    Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId);
+    Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId, Guid currentUserId);
+    Task<BaseResponse<bool>> VoteSetAsync(Guid setId, Guid userId, bool isLike);
+    Task<BaseResponse<bool>> UnvoteSetAsync(Guid setId, Guid userId);
 }

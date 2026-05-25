@@ -7,6 +7,8 @@ public interface ISocialService
 {
     Task<BaseResponse<List<FriendDto>>> GetFriendsAsync(Guid userId);
     Task<BaseResponse<List<FriendRequestDto>>> GetPendingRequestsAsync(Guid userId);
+    Task<BaseResponse<List<SentFriendRequestDto>>> GetOutgoingRequestsAsync(Guid userId);
+    Task<BaseResponse<bool>> CancelFriendRequestAsync(Guid userId, Guid friendshipId);
     Task<BaseResponse<bool>> SendFriendRequestAsync(Guid requesterId, Guid addresseeId);
     Task<BaseResponse<bool>> AcceptFriendRequestAsync(Guid userId, Guid friendshipId);
     Task<BaseResponse<bool>> DeclineFriendRequestAsync(Guid userId, Guid friendshipId);

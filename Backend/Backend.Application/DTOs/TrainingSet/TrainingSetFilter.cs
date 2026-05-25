@@ -20,6 +20,8 @@ public class TrainingSetFilter
     // исключить сеты с таким фокусом на часть тела
     public List<BodyPartFocus>? ExcludeBodyPartFocus { get; set; }
 
+    public bool SortByPopularity { get; set; } = false;
+
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }

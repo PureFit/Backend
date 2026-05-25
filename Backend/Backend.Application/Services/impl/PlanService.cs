@@ -354,6 +354,7 @@ public class PlanService : IPlanService
                         TrainingNumber = t.TrainingNumber,
                         Description = t.Description,
                         StartPlannedDate = t.StartPlannedDate.ToString("o"),
+                        EndPlannedDate = t.EndPlannedDate.ToString("o"),
                         TrainingSet = t.TrainingSet == null ? null : new TrainingSetSummaryDto
                         {
                             Id = t.TrainingSet.Id,

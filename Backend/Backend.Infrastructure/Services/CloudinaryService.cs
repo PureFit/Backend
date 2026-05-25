@@ -61,6 +61,32 @@ public class CloudinaryService : IImageRetrieverService
         }
     }
 
+    public async Task<string> UploadImageAsync(Stream imageStream, string fileName, string folder)
+    {
+        try
+        {
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(fileName, imageStream),
+                Folder = folder,
+                Overwrite = false,
+                PublicId = fileName
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                return uploadResult.SecureUrl.ToString();
+
+            throw new Exception($"Upload failed: {uploadResult.Error?.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading image: {FileName}", fileName);
+            throw;
+        }
+    }
+
     public async Task<bool> DeleteAvatarAsync(string publicId)
     {
         try

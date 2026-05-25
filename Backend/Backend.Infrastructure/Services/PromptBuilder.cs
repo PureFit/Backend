@@ -27,6 +27,9 @@ public class PromptBuilder : IPromptBuilder
 
         var filtered = FilterExercisesByEquipment(exercisesBrief, request.AvailableEquipment);
 
+        if (filtered.Count > 500)
+            filtered = filtered.OrderBy(_ => Guid.NewGuid()).Take(500).ToList();
+
         var prompt = PromptHelper
             .CreateBase()
             .AddUserRequest(request)

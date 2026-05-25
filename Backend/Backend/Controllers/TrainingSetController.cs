@@ -55,6 +55,22 @@ namespace Backend.Controllers
             return result.Success ? Ok(result) : HandleError(result);
         }
 
+        // ── Likes ─────────────────────────────────────────────────────────────
+
+        [HttpPost("{setId}/like")]
+        public async Task<IActionResult> VoteSet(Guid setId, [FromBody] VoteSetRequest request)
+        {
+            var result = await _trSetService.VoteSetAsync(setId, GetUserIdFromClaims(), request.IsLike);
+            return result.Success ? Ok(result) : HandleError(result);
+        }
+
+        [HttpDelete("{setId}/like")]
+        public async Task<IActionResult> UnvoteSet(Guid setId)
+        {
+            var result = await _trSetService.UnvoteSetAsync(setId, GetUserIdFromClaims());
+            return result.Success ? Ok(result) : HandleError(result);
+        }
+
         // ── SetBlock ──────────────────────────────────────────────────────────
 
         [HttpPost("{setId}/blocks")]
@@ -113,7 +129,7 @@ namespace Backend.Controllers
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetPublicSetsByUser(Guid userId)
         {
-            var result = await _trSetService.GetPublicSetsByUserAsync(userId);
+            var result = await _trSetService.GetPublicSetsByUserAsync(userId, GetUserIdFromClaims());
             return result.Success ? Ok(result) : HandleError(result);
         }
     }

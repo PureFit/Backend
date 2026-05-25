@@ -17,11 +17,16 @@ public static class PromptHelper
         var sb = new StringBuilder(prompt.SystemMessage);
         sb.AppendLine();
         sb.AppendLine("=== EXERCISE CATALOG ===");
-        sb.AppendLine("Format: id|name|bodyParts|muscles|equipment|measure");
+        sb.AppendLine("Format: index|name|equipment|measure");
         sb.AppendLine();
 
-        foreach (var ex in exercises)
-            sb.AppendLine(ex.ToCompactString());
+        for (int i = 0; i < exercises.Count; i++)
+        {
+            var ex = exercises[i];
+            var idx = i + 1;
+            sb.AppendLine($"{idx}|{ex.Name}|{string.Join(",", ex.Equipment)}|{string.Join(",", ex.Types.Select(t => t.Measure))}");
+            prompt.ExerciseIndexMap[idx] = ex.Id;
+        }
 
         prompt.SystemMessage = sb.ToString();
         return prompt;
