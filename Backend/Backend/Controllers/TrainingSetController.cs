@@ -108,5 +108,13 @@ namespace Backend.Controllers
             return result.Success ? Ok(result) : HandleError(result);
         }
 
+        // ── Public sets by user ────────────────────────────────────────────────
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetPublicSetsByUser(Guid userId)
+        {
+            var result = await _trSetService.GetPublicSetsByUserAsync(userId);
+            return result.Success ? Ok(result) : HandleError(result);
+        }
     }
 }

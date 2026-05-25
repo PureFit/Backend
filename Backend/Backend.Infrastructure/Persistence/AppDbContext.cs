@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserWorkloadStat> UserWorkloadStats { get; set; }
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<UserAchievement> UserAchievements { get; set; }
+    public DbSet<UserFriendship> UserFriendships { get; set; }
 
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<ExerciseType> ExerciseTypes { get; set; }

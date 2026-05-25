@@ -13,6 +13,7 @@ public interface ITrainingSetRepository
     Task<Guid> AddAsync(TrainingSet trainingSet);
     Task UpdateAsync(TrainingSet trainingSet);
     Task DeleteAsync(TrainingSet trainingSet);
+    Task<List<TrainingSet>> GetPublicByUserAsync(Guid createdByUserId);
 
     // SetBlock
     Task<SetBlock?> GetBlockByIdAsync(Guid blockId);
