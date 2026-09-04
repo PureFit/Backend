@@ -6,6 +6,8 @@ using Backend.Hubs;
 using Backend.Infrastructure.Persistence;
 using Backend.Infrastructure.Repositories;
 using Backend.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -157,6 +159,14 @@ builder.Services.AddScoped<ISocialService, SocialService>();
 
 builder.Services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
 
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection")!;
+builder.Services.AddHangfire(c => c
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connStr)));
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -171,5 +181,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<AchievementHub>("/hubs/achievements");
+app.UseHangfireDashboard("/hangfire");
 
 app.Run();
