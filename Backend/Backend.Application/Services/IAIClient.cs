@@ -1,8 +1,9 @@
+using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 
 namespace Backend.Application.Services;
 
 public interface IAIClient
 {
-    Task<string> SendAsync(AIPrompt prompt);
+    Task<AIResponse> SendAsync(AIPrompt prompt);
 }

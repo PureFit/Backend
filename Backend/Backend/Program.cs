@@ -120,8 +120,16 @@ builder.Services.AddScoped<ITrainingSessionRepository, TrainingSessionRepository
 builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 
 builder.Services.Configure<GroqSettings>(builder.Configuration.GetSection("GroqSettings"));
-builder.Services.AddHttpClient<IAIClient, GroqClient>();
+builder.Services.Configure<ClaudeSettings>(builder.Configuration.GetSection("ClaudeSettings"));
+builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
+builder.Services.AddHttpClient<GroqClient>();
+builder.Services.AddHttpClient<ClaudeClient>();
+builder.Services.AddHttpClient<GeminiClient>();
 builder.Services.AddSingleton<GroqLogger>();
+builder.Services.AddSingleton<ClaudeLogger>();
+builder.Services.AddSingleton<GeminiLogger>();
+builder.Services.AddKeyedTransient<IAIClient>("chat", (sp, _) => sp.GetRequiredService<GroqClient>());
+builder.Services.AddKeyedTransient<IAIClient>("plan", (sp, _) => sp.GetRequiredService<GeminiClient>());
 
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
@@ -131,8 +139,10 @@ builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanScheduler, PlanScheduler>();
 builder.Services.AddScoped<IPlanService, PlanService>();
 
+builder.Services.Configure<UsageLimitsConfig>(builder.Configuration.GetSection("UsageLimits"));
+builder.Services.AddScoped<IAIChatService, AIChatService>();
+builder.Services.AddScoped<IUsageLimiterService, UsageLimiterService>();
 builder.Services.AddScoped<IChatPromptBuilder, ChatPromptBuilder>();
-builder.Services.AddScoped<IChatContextCache, ChatContextCache>();
 builder.Services.AddScoped<IChatHistoryCache, ChatHistoryCache>();
 
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();

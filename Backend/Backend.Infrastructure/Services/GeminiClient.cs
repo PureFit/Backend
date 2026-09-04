@@ -1,4 +1,5 @@
 using Backend.Application.Common;
+using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Services;
 using Microsoft.Extensions.Options;
@@ -26,7 +27,7 @@ public class GeminiClient : IAIClient
         _logger = geminiLogger;
     }
 
-    public async Task<string> SendAsync(AIPrompt prompt)
+    public async Task<AIResponse> SendAsync(AIPrompt prompt)
     {
         // Gemini implicit caching: identical systemInstruction content is automatically
         // reused across requests on Gemini 2.0 Flash — no extra API calls needed.
@@ -49,7 +50,8 @@ public class GeminiClient : IAIClient
             GenerationConfig = new GeminiGenerationConfig
             {
                 Temperature = _settings.Temperature,
-                MaxOutputTokens = _settings.MaxTokens
+                MaxOutputTokens = _settings.MaxTokens,
+                ResponseMimeType = prompt.RequireJsonResponse ? "application/json" : null
             }
         };
 
@@ -80,7 +82,11 @@ public class GeminiClient : IAIClient
             var result = JsonSerializer.Deserialize<GeminiResponse>(rawJson, _jsonOptions)
                 ?? throw new InvalidOperationException("Empty response from Gemini");
 
-            return result.Candidates[0].Content.Parts[0].Text;
+            return new AIResponse
+            {
+                Content    = result.Candidates[0].Content.Parts[0].Text,
+                TokensUsed = result.UsageMetadata?.TotalTokenCount ?? 0
+            };
         }
     }
 }

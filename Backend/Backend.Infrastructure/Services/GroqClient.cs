@@ -1,4 +1,5 @@
 using Backend.Application.Common;
+using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Services;
 using Microsoft.Extensions.Options;
@@ -21,7 +22,7 @@ public class GroqClient : IAIClient
         _logger = groqLogger;
     }
 
-    public async Task<string> SendAsync(AIPrompt prompt)
+    public async Task<AIResponse> SendAsync(AIPrompt prompt)
     {
         var body = new GroqRequest
         {
@@ -63,7 +64,11 @@ public class GroqClient : IAIClient
             var result = JsonSerializer.Deserialize<GroqResponse>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                 ?? throw new InvalidOperationException("Empty response from Groq");
 
-            return result.Choices[0].Message.Content;
+            return new AIResponse
+            {
+                Content    = result.Choices[0].Message.Content,
+                TokensUsed = result.Usage?.TotalTokens ?? 0
+            };
         }
     }
 }

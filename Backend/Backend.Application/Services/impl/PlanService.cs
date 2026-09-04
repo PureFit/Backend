@@ -135,6 +135,19 @@ public class PlanService : IPlanService
         return BaseResponse<bool>.Ok(true);
     }
 
+    public async Task<BaseResponse<string?>> GetPlanStatusAsync(Guid userId)
+    {
+        var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);
+        if (userInfo == null)
+            return BaseResponse<string?>.Fail(ErrorEnums.UserNotFound);
+
+        if (userInfo.CurrentPlanId == null)
+            return BaseResponse<string?>.Ok(null);
+
+        var plan = await _planRepository.GetByIdWithDetailsAsync(userInfo.CurrentPlanId.Value);
+        return BaseResponse<string?>.Ok(plan?.Status.ToString());
+    }
+
     public async Task<BaseResponse<bool>> HasPlanAsync(Guid userId)
     {
         var userInfo = await _userInfoRepository.GetByUserIdAsync(userId);

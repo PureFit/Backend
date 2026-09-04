@@ -1,4 +1,5 @@
 using Backend.Application.Common;
+using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Services;
 using Microsoft.Extensions.Options;
@@ -26,7 +27,7 @@ public class ClaudeClient : IAIClient
         _logger = claudeLogger;
     }
 
-    public async Task<string> SendAsync(AIPrompt prompt)
+    public async Task<AIResponse> SendAsync(AIPrompt prompt)
     {
         var body = new ClaudeRequest
         {
@@ -77,7 +78,11 @@ public class ClaudeClient : IAIClient
             var result = JsonSerializer.Deserialize<ClaudeResponse>(rawJson, _jsonOptions)
                 ?? throw new InvalidOperationException("Empty response from Claude");
 
-            return result.Content.First(b => b.Type == "text").Text;
+            return new AIResponse
+            {
+                Content    = result.Content.First(b => b.Type == "text").Text,
+                TokensUsed = (result.Usage?.InputTokens ?? 0) + (result.Usage?.OutputTokens ?? 0)
+            };
         }
     }
 }

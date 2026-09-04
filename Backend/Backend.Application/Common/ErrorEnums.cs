@@ -34,5 +34,6 @@ public enum ErrorEnums
     UnknownError,
     NotFound,
     Forbidden,
-    ValidationError
+    ValidationError,
+    RateLimitExceeded
 }

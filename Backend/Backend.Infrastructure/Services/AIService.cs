@@ -1,5 +1,7 @@
+using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -7,7 +9,8 @@ namespace Backend.Infrastructure.Services;
 
 public class AIService : IAIService
 {
-    private readonly IAIClient _aiClient;
+    private readonly IAIClient _chatClient;
+    private readonly IAIClient _planClient;
     private readonly ILogger<AIService> _logger;
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
@@ -15,27 +18,31 @@ public class AIService : IAIService
         NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
     };
 
-    public AIService(IAIClient aiClient, ILogger<AIService> logger)
+    public AIService(
+        [FromKeyedServices("chat")] IAIClient chatClient,
+        [FromKeyedServices("plan")] IAIClient planClient,
+        ILogger<AIService> logger)
     {
-        _aiClient = aiClient;
+        _chatClient = chatClient;
+        _planClient = planClient;
         _logger = logger;
     }
 
-    public async Task<string> ChatAsync(AIPrompt prompt)
+    public async Task<AIResponse> ChatAsync(AIPrompt prompt)
     {
         _logger.LogInformation("Sending chat request to AI");
-        return await _aiClient.SendAsync(prompt);
+        return await _chatClient.SendAsync(prompt);
     }
 
     public async Task<PlanFullDto> GetPlanAsync(AIPrompt prompt)
     {
         _logger.LogInformation("Sending plan generation request to AI");
 
-        var response = await _aiClient.SendAsync(prompt);
+        var aiResponse = await _planClient.SendAsync(prompt);
 
-        _logger.LogDebug("AI raw response length: {Length} chars", response.Length);
+        _logger.LogDebug("AI raw response length: {Length} chars, tokens: {Tokens}", aiResponse.Content.Length, aiResponse.TokensUsed);
 
-        var json = ExtractJson(response);
+        var json = ExtractJson(aiResponse.Content);
 
         if (prompt.ExerciseIndexMap.Count > 0)
             json = ResolveExerciseIndices(json, prompt.ExerciseIndexMap);

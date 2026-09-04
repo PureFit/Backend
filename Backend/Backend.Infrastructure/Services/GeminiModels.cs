@@ -42,6 +42,10 @@ internal class GeminiGenerationConfig
 
     [JsonPropertyName("maxOutputTokens")]
     public int MaxOutputTokens { get; set; }
+
+    [JsonPropertyName("responseMimeType")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ResponseMimeType { get; set; }
 }
 
 internal class GeminiResponse
