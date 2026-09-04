@@ -39,7 +39,7 @@ dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(dataSource));
+    options.UseNpgsql(dataSource, o => o.UseVector()));
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
@@ -130,6 +130,10 @@ builder.Services.AddSingleton<ClaudeLogger>();
 builder.Services.AddSingleton<GeminiLogger>();
 builder.Services.AddKeyedTransient<IAIClient>("chat", (sp, _) => sp.GetRequiredService<GroqClient>());
 builder.Services.AddKeyedTransient<IAIClient>("plan", (sp, _) => sp.GetRequiredService<GeminiClient>());
+
+builder.Services.AddHttpClient<GeminiEmbeddingClient>();
+builder.Services.AddScoped<IEmbeddingClient, GeminiEmbeddingClient>();
+builder.Services.AddScoped<IExerciseEmbeddingService, ExerciseEmbeddingService>();
 
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
