@@ -19,6 +19,14 @@ public class PlanController : BaseController
         _scopeFactory = scopeFactory;
     }
 
+    [HttpGet("status")]
+    public async Task<IActionResult> GetPlanStatus()
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _planService.GetPlanStatusAsync(userId);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
     [HttpGet("exists")]
     public async Task<IActionResult> HasPlan()
     {

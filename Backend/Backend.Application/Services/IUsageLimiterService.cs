@@ -1,3 +1,4 @@
+using Backend.Application.Common;
 using Backend.Application.DTOs.Chat;
 
 namespace Backend.Application.Services;
@@ -5,9 +6,9 @@ namespace Backend.Application.Services;
 public interface IUsageLimiterService
 {
     /// <summary>
-    /// Проверяет лимиты. Возвращает null если разрешено, иначе — причину отказа.
+    /// Проверяет лимиты. Возвращает null если разрешено, иначе — ErrorEnums для передачи в BaseResponse.
     /// </summary>
-    Task<string?> CheckAsync(Guid userId);
+    Task<ErrorEnums?> CheckAsync(Guid userId);
 
     Task RecordAsync(Guid userId, int tokensUsed);
 

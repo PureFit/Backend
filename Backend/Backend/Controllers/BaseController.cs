@@ -24,6 +24,7 @@ public abstract class BaseController : ControllerBase
             nameof(ErrorEnums.PlanNotFound) => NotFound(result),
             nameof(ErrorEnums.ValidationError) => BadRequest(result),
             nameof(ErrorEnums.Forbidden) => StatusCode(403, result),
+            nameof(ErrorEnums.RateLimitExceeded) => StatusCode(429, result),
             _ => StatusCode(500, result)
         };
     }
