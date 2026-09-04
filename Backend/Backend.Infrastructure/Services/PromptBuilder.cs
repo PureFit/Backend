@@ -1,53 +1,50 @@
-using Backend.Application.Common;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Helpers;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
+
 namespace Backend.Infrastructure.Services;
 
 public class PromptBuilder : IPromptBuilder
 {
     private readonly IExerciseRepository _exerciseRepository;
-    private readonly ICacheService _cacheService;
+    private readonly IEmbeddingClient _embeddingClient;
 
-    public PromptBuilder(ICacheService cacheService, IExerciseRepository exerciseRepository)
+    public PromptBuilder(IExerciseRepository exerciseRepository, IEmbeddingClient embeddingClient)
     {
-        _cacheService = cacheService;
         _exerciseRepository = exerciseRepository;
+        _embeddingClient = embeddingClient;
     }
 
     public async Task<AIPrompt> BuildAsync(GeneratePlanRequest request)
     {
-        var exercisesBrief = await _cacheService.GetAsync<List<ExerciseBrief>>(CacheKeys.ExercisesBrief);
-        if (exercisesBrief == null)
-        {
-            exercisesBrief = await _exerciseRepository.GetExercisesBriefAsync();
-            await _cacheService.SetAsync<List<ExerciseBrief>>(CacheKeys.ExercisesBrief, exercisesBrief);
-        }
+        var queryText = BuildQueryText(request);
+        var queryVec = await _embeddingClient.EmbedAsync(queryText);
 
-        var filtered = FilterExercisesByEquipment(exercisesBrief, request.AvailableEquipment);
+        var exercises = await _exerciseRepository.SearchByEmbeddingAsync(
+            queryVec,
+            request.AvailableEquipment,
+            topN: 60);
 
-        if (filtered.Count > 500)
-            filtered = filtered.OrderBy(_ => Guid.NewGuid()).Take(500).ToList();
-
-        var prompt = PromptHelper
+        return PromptHelper
             .CreateBase()
             .AddUserRequest(request)
-            .AddExercises(filtered);
-
-        return prompt;
+            .AddExercises(exercises);
     }
 
-    // Упражнения без оборудования (bodyweight) всегда включаются.
-    // Если список оборудования пустой — возвращаем только bodyweight.
-    private static List<ExerciseBrief> FilterExercisesByEquipment(
-        List<ExerciseBrief> all,
-        List<string> availableEquipment)
+    private static string BuildQueryText(GeneratePlanRequest request)
     {
-        return all
-            .Where(e => e.Equipment.Count == 0
-                     || e.Equipment.Any(eq => availableEquipment
-                         .Any(a => a.Equals(eq, StringComparison.OrdinalIgnoreCase))))
-            .ToList();
+        var parts = new List<string> { request.PlanSubType };
+
+        if (!string.IsNullOrWhiteSpace(request.FitnessLevel))
+            parts.Add($"fitness level: {request.FitnessLevel}");
+        if (request.AvailableEquipment.Count > 0)
+            parts.Add($"equipment: {string.Join(", ", request.AvailableEquipment)}");
+        if (!string.IsNullOrWhiteSpace(request.GoalMetadata))
+            parts.Add(request.GoalMetadata);
+        if (!string.IsNullOrWhiteSpace(request.FreeTextWish))
+            parts.Add(request.FreeTextWish);
+
+        return string.Join(" ", parts);
     }
 }

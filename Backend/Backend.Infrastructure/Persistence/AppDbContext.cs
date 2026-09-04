@@ -3,6 +3,7 @@ using Backend.Core.Entities.AchievementRelated;
 using Backend.Core.Entities.ExerciseRelated;
 using Backend.Core.Entities.TrainingRelated;
 using Microsoft.EntityFrameworkCore;
+using Pgvector.EntityFrameworkCore;
 
 namespace Backend.Infrastructure.Persistence;
 
@@ -37,9 +38,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ExerciseMuscle> ExerciseMuscles { get; set; }
     public DbSet<ExerciseEquipment> ExerciseEquipments { get; set; }
     public DbSet<ExerciseBodyPart> ExerciseBodyParts { get; set; }
+    public DbSet<ExerciseEmbeddingRecord> ExerciseEmbeddings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("vector");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

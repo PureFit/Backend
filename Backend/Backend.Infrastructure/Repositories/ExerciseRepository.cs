@@ -4,6 +4,8 @@ using Backend.Application.Repositories;
 using Backend.Core.Entities.ExerciseRelated;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
 
 namespace Backend.Infrastructure.Repositories;
 
@@ -219,4 +221,91 @@ public class ExerciseRepository : IExerciseRepository
                 }).ToList()
             })
             .ToListAsync();
+
+    public async Task<List<ExerciseEmbedData>> GetExercisesForEmbeddingAsync() =>
+        await _db.Exercises
+            .Include(e => e.ExerciseMuscles).ThenInclude(em => em.Muscle)
+            .Include(e => e.ExerciseBodyParts).ThenInclude(eb => eb.BodyPart)
+            .Include(e => e.ExerciseEquipments).ThenInclude(ee => ee.Equipment)
+            .Select(e => new ExerciseEmbedData
+            {
+                Id = e.Id,
+                Name = e.Name,
+                Category = e.Category,
+                Muscles = e.ExerciseMuscles.Select(em => em.Muscle.Name).ToList(),
+                BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+                Equipment = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+                Keywords = e.Keywords
+            })
+            .ToListAsync();
+
+    public async Task UpsertEmbeddingAsync(Guid exerciseId, float[] embedding)
+    {
+        var vec = new Vector(embedding);
+        var existing = await _db.ExerciseEmbeddings.FindAsync(exerciseId);
+        if (existing != null)
+        {
+            existing.Embedding = vec;
+        }
+        else
+        {
+            _db.ExerciseEmbeddings.Add(new ExerciseEmbeddingRecord
+            {
+                ExerciseId = exerciseId,
+                Embedding = vec
+            });
+        }
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<List<ExerciseBrief>> SearchByEmbeddingAsync(
+        float[] queryVector,
+        List<string> equipment,
+        int topN = 60)
+    {
+        var vec = new Vector(queryVector);
+
+        // 1. Топ-кандидаты по косинусному расстоянию
+        var topIds = await _db.ExerciseEmbeddings
+            .OrderBy(e => e.Embedding.CosineDistance(vec))
+            .Take(topN * 3)
+            .Select(e => e.ExerciseId)
+            .ToListAsync();
+
+        // 2. Загружаем упражнения с навигационными свойствами
+        var exercises = await _db.Exercises
+            .Where(e => topIds.Contains(e.Id))
+            .Include(e => e.ExerciseTypes)
+            .Include(e => e.ExerciseMuscles).ThenInclude(em => em.Muscle)
+            .Include(e => e.ExerciseBodyParts).ThenInclude(eb => eb.BodyPart)
+            .Include(e => e.ExerciseEquipments).ThenInclude(ee => ee.Equipment)
+            .Select(e => new ExerciseBrief
+            {
+                Id = e.Id,
+                Name = e.Name,
+                BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+                Muscles = e.ExerciseMuscles.Select(em => em.Muscle.Name).ToList(),
+                Equipment = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+                Types = e.ExerciseTypes.Select(t => new ExerciseTypeBrief
+                {
+                    Id = t.Id,
+                    Measure = t.MeasureCategory.ToString()
+                }).ToList()
+            })
+            .ToListAsync();
+
+        // 3. Фильтр по оборудованию (bodyweight всегда включён)
+        var filtered = exercises
+            .Where(e => e.Equipment.Count == 0
+                     || e.Equipment.Any(eq => equipment
+                         .Any(a => a.Equals(eq, StringComparison.OrdinalIgnoreCase))))
+            .ToHashSet();
+
+        // 4. Восстанавливаем порядок релевантности и берём topN
+        return topIds
+            .Select(id => filtered.FirstOrDefault(e => e.Id == id))
+            .Where(e => e is not null)
+            .Take(topN)
+            .ToList()!;
+    }
 }
