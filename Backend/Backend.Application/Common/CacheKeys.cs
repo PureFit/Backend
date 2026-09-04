@@ -33,4 +33,11 @@ public static class CacheKeys
     public const string ExerciseTypes = "exercise-types";
 
     public static string SvgBase(bool isMale) => isMale ? "svg:base:male" : "svg:base:female";
+
+    public static string ChatContext(Guid userId) => $"chat:context:{userId}";
+    public static string ChatHistory(Guid userId) => $"chat:history:{userId}";
+
+    public static string AppSetting(string key)         => $"settings:{key}";
+    public static string DailyTokens(Guid userId, string date)   => $"ai:usage:tokens:{userId}:{date}";
+    public static string DailyRequests(Guid userId, string date) => $"ai:usage:requests:{userId}:{date}";
 }

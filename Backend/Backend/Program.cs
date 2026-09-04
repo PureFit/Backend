@@ -131,6 +131,10 @@ builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanScheduler, PlanScheduler>();
 builder.Services.AddScoped<IPlanService, PlanService>();
 
+builder.Services.AddScoped<IChatPromptBuilder, ChatPromptBuilder>();
+builder.Services.AddScoped<IChatContextCache, ChatContextCache>();
+builder.Services.AddScoped<IChatHistoryCache, ChatHistoryCache>();
+
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
 builder.Services.AddScoped<IAchievementService, AchievementService>();
 

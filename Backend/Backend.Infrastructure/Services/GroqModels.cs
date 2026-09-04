@@ -17,7 +17,8 @@ internal class GroqRequest
     public int MaxTokens { get; set; } = 32768;
 
     [JsonPropertyName("response_format")]
-    public GroqResponseFormat ResponseFormat { get; set; } = new();
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GroqResponseFormat? ResponseFormat { get; set; }
 }
 
 internal class GroqMessage
@@ -39,6 +40,15 @@ internal class GroqResponse
 {
     [JsonPropertyName("choices")]
     public List<GroqChoice> Choices { get; set; } = [];
+
+    [JsonPropertyName("usage")]
+    public GroqUsage? Usage { get; set; }
+}
+
+internal class GroqUsage
+{
+    [JsonPropertyName("total_tokens")]
+    public int TotalTokens { get; set; }
 }
 
 internal class GroqChoice
