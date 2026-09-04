@@ -10,5 +10,11 @@ public class AIPrompt
 
     // index (1,2,3...) → real exercise UUID, populated when building the catalog
     public Dictionary<int, Guid> ExerciseIndexMap { get; set; } = [];
+
+    /// <summary>
+    /// Если true — просим у провайдера JSON-режим (для генерации плана).
+    /// Для свободного чата должно быть false.
+    /// </summary>
+    public bool RequireJsonResponse { get; set; } = false;
 }
 

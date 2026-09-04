@@ -21,6 +21,12 @@ public class AIService : IAIService
         _logger = logger;
     }
 
+    public async Task<string> ChatAsync(AIPrompt prompt)
+    {
+        _logger.LogInformation("Sending chat request to AI");
+        return await _aiClient.SendAsync(prompt);
+    }
+
     public async Task<PlanFullDto> GetPlanAsync(AIPrompt prompt)
     {
         _logger.LogInformation("Sending plan generation request to AI");

@@ -32,7 +32,8 @@ public class GroqClient : IAIClient
             [
                 new() { Role = "system", Content = prompt.SystemMessage },
                 new() { Role = "user",   Content = prompt.UserMessage   }
-            ]
+            ],
+            ResponseFormat = prompt.RequireJsonResponse ? new GroqResponseFormat() : null
         };
 
         var delays = new[] { 15, 30, 60 };
