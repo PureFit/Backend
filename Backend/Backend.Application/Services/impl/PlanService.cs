@@ -59,6 +59,7 @@ public class PlanService : IPlanService
                 Id = Guid.NewGuid(),
                 Status = PlanStatus.Failed,
                 Name = "Failed",
+                Description = "",
                 CreatedAt = DateTime.UtcNow,
                 UserInfoId = userInfo.Id
             };
@@ -229,7 +230,7 @@ public class PlanService : IPlanService
             Id = Guid.NewGuid(),
             Status = PlanStatus.Active,
             Name = scheduled.Name,
-            Description = scheduled.Description,
+            Description = scheduled.Description ?? "",
             CreatedAt = DateTime.UtcNow,
             PlanType = planType,
             PlanSubType = planSubType,
