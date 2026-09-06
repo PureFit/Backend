@@ -50,7 +50,20 @@ public class PlanService : IPlanService
 
         var result = await _planGenerator.GeneratePlanAsync(generateRequest);
         if (!result.Success || result.Data == null)
+        {
+            var failedPlan = new AIPlan
+            {
+                Id = Guid.NewGuid(),
+                Status = PlanStatus.Failed,
+                Name = "Failed",
+                CreatedAt = DateTime.UtcNow,
+                UserInfoId = userInfo.Id
+            };
+            await _planRepository.AddAsync(failedPlan);
+            userInfo.CurrentPlanId = failedPlan.Id;
+            await _userInfoRepository.UpdateAsync(userInfo);
             return BaseResponse<bool>.Fail(ErrorEnums.PlanGenerationFailed);
+        }
 
         var scheduled = await _planScheduler.ScheduleAsync(result.Data, userId, request.SessionDurationMinutes);
 
