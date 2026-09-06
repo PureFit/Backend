@@ -22,6 +22,7 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
+    .Filter.ByExcluding(e => e.Properties.TryGetValue("RequestPath", out var rp) && rp.ToString().Contains("hangfire"))
     .WriteTo.Console()
     .WriteTo.File("logs/purefit_log-.txt",
         rollingInterval: RollingInterval.Day,

@@ -16,6 +16,7 @@ public class PlanService : IPlanService
     private readonly IPlanGenerator _planGenerator;
     private readonly IPlanScheduler _planScheduler;
     private readonly ICacheService _cacheService;
+    private readonly IExerciseRepository _exerciseRepository;
     private readonly IAchievementService _achievementService;
     private readonly ILogger<PlanService> _logger;
 
@@ -25,6 +26,7 @@ public class PlanService : IPlanService
         IPlanGenerator planGenerator,
         IPlanScheduler planScheduler,
         ICacheService cacheService,
+        IExerciseRepository exerciseRepository,
         IAchievementService achievementService,
         ILogger<PlanService> logger)
     {
@@ -33,6 +35,7 @@ public class PlanService : IPlanService
         _planGenerator = planGenerator;
         _planScheduler = planScheduler;
         _cacheService = cacheService;
+        _exerciseRepository = exerciseRepository;
         _achievementService = achievementService;
         _logger = logger;
     }
@@ -67,10 +70,17 @@ public class PlanService : IPlanService
 
         var scheduled = await _planScheduler.ScheduleAsync(result.Data, userId, request.SessionDurationMinutes);
 
-        var briefs = await _cacheService.GetAsync<List<ExerciseBrief>>(CacheKeys.ExercisesBrief) ?? [];
+        var briefs = await _cacheService.GetAsync<List<ExerciseBrief>>(CacheKeys.ExercisesBrief)
+            ?? await _exerciseRepository.GetExercisesBriefAsync();
+        _logger.LogInformation("ExerciseBriefs loaded: {Count}", briefs.Count);
         var exerciseTypeMap = briefs.ToDictionary(b => b.Id, b => b.Types);
 
         var plan = MapToAIPlan(scheduled, request, userInfo, exerciseTypeMap);
+
+        var totalEntries = plan.WeekPlans.SelectMany(w => w.PlanTrainings)
+            .SelectMany(t => t.TrainingSet.SetBlocks)
+            .SelectMany(b => b.ExerciseEntries).Count();
+        _logger.LogInformation("Plan mapped: {Weeks} weeks, {Entries} exercise entries total", plan.WeekPlans.Count, totalEntries);
 
         await _planRepository.AddAsync(plan);
 
