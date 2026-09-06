@@ -2,6 +2,7 @@ using Backend.Application.Common;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
 using Backend.Application.Services.impl;
+using Backend.Middleware;
 using Backend.Hubs;
 using Backend.Infrastructure.Persistence;
 using Backend.Infrastructure.Repositories;
@@ -38,6 +39,7 @@ builder.Services.AddOpenApi();
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
 dataSourceBuilder.EnableDynamicJson();
+dataSourceBuilder.UseVector();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -159,13 +161,17 @@ builder.Services.AddScoped<ISocialService, SocialService>();
 
 builder.Services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
 
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+
 var connStr = builder.Configuration.GetConnectionString("DefaultConnection")!;
 builder.Services.AddHangfire(c => c
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connStr)));
-builder.Services.AddHangfireServer();
+builder.Services.AddHangfireServer(o => o.WorkerCount = 2);
 
 var app = builder.Build();
 
@@ -179,6 +185,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<SubscriptionCheckMiddleware>();
 app.MapControllers();
 app.MapHub<AchievementHub>("/hubs/achievements");
 app.UseHangfireDashboard("/hangfire");

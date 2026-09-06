@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pgvector;
@@ -13,9 +14,11 @@ using Pgvector;
 namespace Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904204750_RevertEmbeddingTo768")]
+    partial class RevertEmbeddingTo768
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -953,54 +956,6 @@ namespace Backend.Infrastructure.Migrations
                     b.ToTable("UserMetricLogs");
                 });
 
-            modelBuilder.Entity("Backend.Core.Entities.UserSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("CurrentPeriodEnd")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("PriceId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("None");
-
-                    b.Property<string>("StripeCustomerId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("StripeSubscriptionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<long?>("TrialEndsAt")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StripeCustomerId");
-
-                    b.HasIndex("StripeSubscriptionId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("UserSubscriptions");
-                });
-
             modelBuilder.Entity("Backend.Infrastructure.Persistence.ExerciseEmbeddingRecord", b =>
                 {
                     b.Property<Guid>("ExerciseId")
@@ -1009,7 +964,7 @@ namespace Backend.Infrastructure.Migrations
 
                     b.Property<Vector>("Embedding")
                         .IsRequired()
-                        .HasColumnType("vector(3072)");
+                        .HasColumnType("vector(768)");
 
                     b.HasKey("ExerciseId");
 
@@ -1356,17 +1311,6 @@ namespace Backend.Infrastructure.Migrations
                     b.HasOne("Backend.Core.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Backend.Core.Entities.UserSubscription", b =>
-                {
-                    b.HasOne("Backend.Core.Entities.User", "User")
-                        .WithOne()
-                        .HasForeignKey("Backend.Core.Entities.UserSubscription", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

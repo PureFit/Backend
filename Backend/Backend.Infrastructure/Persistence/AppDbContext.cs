@@ -40,6 +40,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ExerciseBodyPart> ExerciseBodyParts { get; set; }
     public DbSet<ExerciseEmbeddingRecord> ExerciseEmbeddings { get; set; }
 
+    public DbSet<UserSubscription> UserSubscriptions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("vector");

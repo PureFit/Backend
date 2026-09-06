@@ -35,7 +35,7 @@ public class ExerciseEmbeddingService : IExerciseEmbeddingService
             }
 
             if (i + batchSize < exercises.Count)
-                await Task.Delay(300, ct);
+                await Task.Delay(2000, ct);
         }
     }
 

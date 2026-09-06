@@ -9,6 +9,6 @@ public class ExerciseEmbeddingConfiguration : IEntityTypeConfiguration<ExerciseE
     {
         builder.ToTable("exercise_embeddings");
         builder.HasKey(e => e.ExerciseId);
-        builder.Property(e => e.Embedding).HasColumnType("vector(768)");
+        builder.Property(e => e.Embedding).HasColumnType("vector(3072)");
     }
 }

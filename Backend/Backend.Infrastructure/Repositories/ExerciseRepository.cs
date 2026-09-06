@@ -242,19 +242,14 @@ public class ExerciseRepository : IExerciseRepository
     public async Task UpsertEmbeddingAsync(Guid exerciseId, float[] embedding)
     {
         var vec = new Vector(embedding);
+        _db.ChangeTracker.Clear();
+
         var existing = await _db.ExerciseEmbeddings.FindAsync(exerciseId);
         if (existing != null)
-        {
             existing.Embedding = vec;
-        }
         else
-        {
-            _db.ExerciseEmbeddings.Add(new ExerciseEmbeddingRecord
-            {
-                ExerciseId = exerciseId,
-                Embedding = vec
-            });
-        }
+            _db.ExerciseEmbeddings.Add(new ExerciseEmbeddingRecord { ExerciseId = exerciseId, Embedding = vec });
+
         await _db.SaveChangesAsync();
     }
 

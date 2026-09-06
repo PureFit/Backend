@@ -13,13 +13,13 @@ public class PromptBuilder : IPromptBuilder
     public PromptBuilder(IExerciseRepository exerciseRepository, IEmbeddingClient embeddingClient)
     {
         _exerciseRepository = exerciseRepository;
-        _embeddingClient = embeddingClient;
+        _embeddingClient    = embeddingClient;
     }
 
     public async Task<AIPrompt> BuildAsync(GeneratePlanRequest request)
     {
         var queryText = BuildQueryText(request);
-        var queryVec = await _embeddingClient.EmbedAsync(queryText);
+        var queryVec  = await _embeddingClient.EmbedAsync(queryText, EmbeddingTaskType.RetrievalQuery);
 
         var exercises = await _exerciseRepository.SearchByEmbeddingAsync(
             queryVec,
