@@ -70,10 +70,26 @@ public class AIService : IAIService
 
     private static string ExtractJson(string response)
     {
-        var start = response.IndexOf('{');
-        var end = response.LastIndexOf('}');
-        if (start == -1 || end == -1)
+        var objStart = response.IndexOf('{');
+        var arrStart = response.IndexOf('[');
+
+        // если ответ начинается с массива — берём первый элемент
+        if (arrStart != -1 && (objStart == -1 || arrStart < objStart))
+        {
+            var innerObj = response.IndexOf('{', arrStart);
+            var arrEnd = response.LastIndexOf(']');
+            if (innerObj == -1 || arrEnd == -1)
+                throw new InvalidOperationException("No JSON object found inside array response");
+            // берём от первого { внутри массива до последнего } перед ]
+            var innerEnd = response.LastIndexOf('}', arrEnd);
+            if (innerEnd == -1)
+                throw new InvalidOperationException("No closing brace found inside array response");
+            return response[innerObj..(innerEnd + 1)];
+        }
+
+        if (objStart == -1)
             throw new InvalidOperationException("No JSON found in AI response");
-        return response[start..(end + 1)];
+        var end = response.LastIndexOf('}');
+        return response[objStart..(end + 1)];
     }
 }

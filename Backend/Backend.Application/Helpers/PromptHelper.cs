@@ -10,7 +10,7 @@ public static class PromptHelper
         {
             SystemMessage = PromptConstants.BaseGenerateHeader(),
             UserMessage = string.Empty,
-            RequireJsonResponse = true
+            RequireJsonResponse = false
         };
 
     public static AIPrompt AddExercises(this AIPrompt prompt, List<ExerciseBrief> exercises)
