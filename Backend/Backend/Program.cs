@@ -135,7 +135,7 @@ builder.Services.AddSingleton<GroqLogger>();
 builder.Services.AddSingleton<ClaudeLogger>();
 builder.Services.AddSingleton<GeminiLogger>();
 builder.Services.AddKeyedTransient<IAIClient>("chat", (sp, _) => sp.GetRequiredService<GroqClient>());
-builder.Services.AddKeyedTransient<IAIClient>("plan", (sp, _) => sp.GetRequiredService<GeminiClient>());
+builder.Services.AddKeyedTransient<IAIClient>("plan", (sp, _) => sp.GetRequiredService<ClaudeClient>());
 
 builder.Services.AddHttpClient<GeminiEmbeddingClient>();
 builder.Services.AddScoped<IEmbeddingClient, GeminiEmbeddingClient>();
