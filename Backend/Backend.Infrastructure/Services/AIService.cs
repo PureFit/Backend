@@ -40,7 +40,8 @@ public class AIService : IAIService
 
         var aiResponse = await _planClient.SendAsync(prompt);
 
-        _logger.LogDebug("AI raw response length: {Length} chars, tokens: {Tokens}", aiResponse.Content.Length, aiResponse.TokensUsed);
+        _logger.LogInformation("AI raw response: tokens={Tokens}, length={Length}\n{Response}",
+            aiResponse.TokensUsed, aiResponse.Content.Length, aiResponse.Content);
 
         var json = ExtractJson(aiResponse.Content);
 
