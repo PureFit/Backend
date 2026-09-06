@@ -17,18 +17,21 @@ public static class PromptConstants
         - estimatedDurationMinutes in the JSON must match the requested session duration exactly.
         - Structure the plan with progressive overload across weeks (increase weight, reps, or sets each week)
         - Return ONLY valid JSON matching the schema below, no extra text
-        - CRITICAL: Keep JSON compact. Use short names (max 4 words). Omit null fields entirely. No verbose descriptions.
+        - CRITICAL: Keep JSON compact. Omit null fields entirely. Keep descriptions under 20 words.
 
         Response JSON schema:
         {
           "name": "string",
+          "description": "string",
           "weeks": [
             {
               "weekNumber": 1,
+              "description": "string",
               "trainings": [
                 {
                   "trainingNumber": 1,
                   "name": "string",
+                  "description": "string",
                   "estimatedDurationMinutes": 60,
                   "blocks": [
                     {
