@@ -2,6 +2,7 @@ using Backend.Application.Common;
 using Backend.Application.DTOs.Chat;
 using Backend.Application.DTOs.Plan;
 using Backend.Application.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Json;
@@ -13,18 +14,20 @@ public class GeminiClient : IAIClient
 {
     private readonly HttpClient _http;
     private readonly GeminiSettings _settings;
-    private readonly GeminiLogger _logger;
+    private readonly GeminiLogger _geminiLogger;
+    private readonly ILogger<GeminiClient> _logger;
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    public GeminiClient(HttpClient httpClient, IOptions<GeminiSettings> options, GeminiLogger geminiLogger)
+    public GeminiClient(HttpClient httpClient, IOptions<GeminiSettings> options, GeminiLogger geminiLogger, ILogger<GeminiClient> logger)
     {
         _http = httpClient;
         _settings = options.Value;
-        _logger = geminiLogger;
+        _geminiLogger = geminiLogger;
+        _logger = logger;
     }
 
     public async Task<AIResponse> SendAsync(AIPrompt prompt)
@@ -64,7 +67,7 @@ public class GeminiClient : IAIClient
             request.Content = JsonContent.Create(body);
 
             if (attempt == 0)
-                await _logger.LogRequestAsync(prompt.SystemMessage, prompt.UserMessage);
+                await _geminiLogger.LogRequestAsync(prompt.SystemMessage, prompt.UserMessage);
 
             var response = await _http.SendAsync(request);
 
@@ -77,14 +80,18 @@ public class GeminiClient : IAIClient
             response.EnsureSuccessStatusCode();
 
             var rawJson = await response.Content.ReadAsStringAsync();
-            await _logger.LogResponseAsync(rawJson);
+            await _geminiLogger.LogResponseAsync(rawJson);
 
             var result = JsonSerializer.Deserialize<GeminiResponse>(rawJson, _jsonOptions)
                 ?? throw new InvalidOperationException("Empty response from Gemini");
 
+            var candidate = result.Candidates[0];
+            if (candidate.FinishReason != null && candidate.FinishReason != "STOP")
+                _logger.LogWarning("Gemini finish reason: {Reason}", candidate.FinishReason);
+
             return new AIResponse
             {
-                Content    = result.Candidates[0].Content.Parts[0].Text,
+                Content    = candidate.Content.Parts[0].Text,
                 TokensUsed = result.UsageMetadata?.TotalTokenCount ?? 0
             };
         }

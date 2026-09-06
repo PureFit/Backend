@@ -67,4 +67,7 @@ internal class GeminiCandidate
 {
     [JsonPropertyName("content")]
     public GeminiContent Content { get; set; } = null!;
+
+    [JsonPropertyName("finishReason")]
+    public string? FinishReason { get; set; }
 }
