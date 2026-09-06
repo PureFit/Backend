@@ -1,4 +1,5 @@
 using Backend.Application.Common;
+using Backend.Infrastructure;
 using Backend.Application.Repositories;
 using Backend.Application.Services;
 using Backend.Application.Services.impl;
@@ -188,6 +189,10 @@ app.UseAuthorization();
 app.UseMiddleware<SubscriptionCheckMiddleware>();
 app.MapControllers();
 app.MapHub<AchievementHub>("/hubs/achievements");
-app.UseHangfireDashboard("/hangfire");
+var adminKey = app.Configuration["AdminSettings:SecretKey"] ?? "";
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = [new HangfireAdminKeyFilter(adminKey)]
+});
 
 app.Run();
