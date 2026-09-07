@@ -47,14 +47,6 @@ internal class GeminiGenerationConfig
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ResponseMimeType { get; set; }
 
-    [JsonPropertyName("thinkingConfig")]
-    public GeminiThinkingConfig ThinkingConfig { get; set; } = new();
-}
-
-internal class GeminiThinkingConfig
-{
-    [JsonPropertyName("thinkingBudget")]
-    public int ThinkingBudget { get; set; } = 0;
 }
 
 internal class GeminiResponse
