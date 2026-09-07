@@ -130,7 +130,7 @@ builder.Services.Configure<ClaudeSettings>(builder.Configuration.GetSection("Cla
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
 builder.Services.AddHttpClient<GroqClient>();
 builder.Services.AddHttpClient<ClaudeClient>();
-builder.Services.AddHttpClient<GeminiClient>();
+builder.Services.AddHttpClient<GeminiClient>(c => c.Timeout = TimeSpan.FromMinutes(5));
 builder.Services.AddSingleton<GroqLogger>();
 builder.Services.AddSingleton<ClaudeLogger>();
 builder.Services.AddSingleton<GeminiLogger>();
