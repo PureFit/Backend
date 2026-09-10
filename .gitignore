@@ -444,3 +444,5 @@ FodyWeavers.xsd
 **/*.png
 **/*.webp
 **/*.gif
+
+!Backend/Backend/wwwroot/videos/*.gif
