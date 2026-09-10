@@ -12,6 +12,12 @@ public class TrainingSessionDto
     public Guid TrainingSetId { get; set; }
     public string TrainingSetName { get; set; } = "";
     public Guid? PlanTrainingId { get; set; }
+    public int LastStepIndex { get; set; }
+}
+
+public class SaveProgressRequest
+{
+    public int StepIndex { get; set; }
 }
 
 public class StartSessionRequest

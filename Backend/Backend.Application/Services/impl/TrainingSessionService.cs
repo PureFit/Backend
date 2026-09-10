@@ -239,6 +239,30 @@ public class TrainingSessionService : ITrainingSessionService
         }
     }
 
+    public async Task<BaseResponse<TrainingSessionDto>> SaveProgressAsync(Guid userId, Guid sessionId, int stepIndex)
+    {
+        var userInfo = await _userInfoRepo.GetByUserIdAsync(userId);
+        if (userInfo is null) return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.UserNotFound);
+
+        var session = await _sessionRepo.GetByIdAsync(sessionId, userInfo.Id);
+        if (session is null) return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.SessionNotFound);
+        if (session.Status != SessionStatus.InProgress) return BaseResponse<TrainingSessionDto>.Fail(ErrorEnums.ValidationError);
+
+        session.LastStepIndex = stepIndex;
+        await _sessionRepo.UpdateAsync(session);
+
+        return BaseResponse<TrainingSessionDto>.Ok(ToDto(session, session.TrainingSet?.Name ?? ""));
+    }
+
+    public async Task<BaseResponse<TrainingSessionDto?>> GetActiveBySetAsync(Guid userId, Guid trainingSetId)
+    {
+        var userInfo = await _userInfoRepo.GetByUserIdAsync(userId);
+        if (userInfo is null) return BaseResponse<TrainingSessionDto?>.Fail(ErrorEnums.UserNotFound);
+
+        var session = await _sessionRepo.GetActiveBySetAsync(trainingSetId, userInfo.Id);
+        return BaseResponse<TrainingSessionDto?>.Ok(session is null ? null : ToDto(session, session.TrainingSet?.Name ?? ""));
+    }
+
     private static TrainingSessionDto ToDto(TrainingSession s, string setName) => new()
     {
         Id = s.Id,
@@ -248,6 +272,7 @@ public class TrainingSessionService : ITrainingSessionService
         DurationMinutes = s.End.HasValue ? (int)(s.End.Value - s.Start).TotalMinutes : null,
         TrainingSetId = s.TrainingSetId ?? Guid.Empty,
         TrainingSetName = setName,
-        PlanTrainingId = s.PlanTrainingId
+        PlanTrainingId = s.PlanTrainingId,
+        LastStepIndex = s.LastStepIndex
     };
 }

@@ -1,5 +1,6 @@
 using Backend.Application.Repositories;
 using Backend.Core.Entities.TrainingRelated;
+using Backend.Core.Enums;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,5 +50,14 @@ public class TrainingSessionRepository : ITrainingSessionRepository
             .ToListAsync();
 
         return (items, total);
+    }
+
+    public async Task<TrainingSession?> GetActiveBySetAsync(Guid trainingSetId, Guid userInfoId)
+    {
+        return await _db.TrainingSessions
+            .Include(s => s.TrainingSet)
+            .FirstOrDefaultAsync(s => s.TrainingSetId == trainingSetId
+                                    && s.UserInfoId == userInfoId
+                                    && s.Status == SessionStatus.InProgress);
     }
 }

@@ -22,5 +22,7 @@ namespace Backend.Core.Entities.TrainingRelated
         // Используется только для свободных тренировок (без плана).
         public Guid? TrainingSetId { get; set; }
         public TrainingSet? TrainingSet { get; set; }
+
+        public int LastStepIndex { get; set; } = 0;
     }
 }

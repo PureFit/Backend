@@ -8,4 +8,5 @@ public interface ITrainingSessionRepository
     Task<TrainingSession?> GetByIdAsync(Guid sessionId, Guid userInfoId);
     Task UpdateAsync(TrainingSession session);
     Task<(List<TrainingSession> Items, int TotalCount)> GetHistoryAsync(Guid userInfoId, int page, int pageSize);
+    Task<TrainingSession?> GetActiveBySetAsync(Guid trainingSetId, Guid userInfoId);
 }

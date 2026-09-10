@@ -59,4 +59,22 @@ public class TrainingSessionController : BaseController
         var result = await _sessionService.GetHistoryAsync(userId, page, pageSize);
         return result.Success ? Ok(result) : HandleError(result);
     }
+
+    /// <summary>Save current step progress</summary>
+    [HttpPatch("{sessionId:guid}/progress")]
+    public async Task<IActionResult> SaveProgress(Guid sessionId, [FromBody] SaveProgressRequest request)
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _sessionService.SaveProgressAsync(userId, sessionId, request.StepIndex);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
+
+    /// <summary>Get active InProgress session for a training set</summary>
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive([FromQuery] Guid setId)
+    {
+        var userId = GetUserIdFromClaims();
+        var result = await _sessionService.GetActiveBySetAsync(userId, setId);
+        return result.Success ? Ok(result) : HandleError(result);
+    }
 }
