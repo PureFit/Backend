@@ -3,6 +3,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
+
 namespace Backend.Controllers;
 
 [ApiController]
@@ -34,5 +35,15 @@ public class AdminEmbeddingController : ControllerBase
 
         BackgroundJob.Enqueue<IExerciseTranslationService>(svc => svc.PopulateNameRuAsync(CancellationToken.None));
         return Accepted(new { message = "Translation started in background." });
+    }
+
+    [HttpPost("translate-metadata")]
+    public IActionResult TranslateMetadata([FromHeader(Name = "X-Admin-Key")] string? adminKey)
+    {
+        if (adminKey != _adminKey)
+            return Unauthorized();
+
+        BackgroundJob.Enqueue<IMetadataTranslationService>(svc => svc.PopulateAsync(CancellationToken.None));
+        return Accepted(new { message = "Metadata translation started in background." });
     }
 }

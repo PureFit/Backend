@@ -56,13 +56,17 @@ public class ExerciseRepository : IExerciseRepository
             {
                 Id = e.Id,
                 Name = e.Name,
+                NameRu = e.NameRu,
                 ImageUrl = e.ImageUrl,
                 GifUrl = e.GifUrl,
                 Category = e.Category.ToString(),
                 AllowsWeight = e.AllowsWeight,
                 BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+                BodyPartsRu = e.ExerciseBodyParts.Select(eb => eb.BodyPart.NameRu ?? eb.BodyPart.Name).ToList(),
                 PrimaryMuscles = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.Name).ToList(),
+                PrimaryMusclesRu = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.NameRu ?? em.Muscle.Name).ToList(),
                 Equipments = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+                EquipmentsRu = e.ExerciseEquipments.Select(ee => ee.Equipment.NameRu ?? ee.Equipment.Name).ToList(),
                 ExerciseTypes = e.ExerciseTypes.Select(t => new ExerciseTypeDto
                 {
                     Id = t.Id,
@@ -105,6 +109,7 @@ public class ExerciseRepository : IExerciseRepository
         {
             Id = e.Id,
             Name = e.Name,
+            NameRu = e.NameRu,
             ImageUrl = e.ImageUrl,
             GifUrl = e.GifUrl,
             Overview = e.Overview,
@@ -112,9 +117,13 @@ public class ExerciseRepository : IExerciseRepository
             AllowsWeight = e.AllowsWeight,
             BaseWeightBodyRatio = e.BaseWeightBodyRatio,
             BodyParts = e.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+            BodyPartsRu = e.ExerciseBodyParts.Select(eb => eb.BodyPart.NameRu ?? eb.BodyPart.Name).ToList(),
             PrimaryMuscles = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.Name).ToList(),
+            PrimaryMusclesRu = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.NameRu ?? em.Muscle.Name).ToList(),
             SecondaryMuscles = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Secondary).Select(em => em.Muscle.Name).ToList(),
+            SecondaryMusclesRu = e.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Secondary).Select(em => em.Muscle.NameRu ?? em.Muscle.Name).ToList(),
             Equipments = e.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+            EquipmentsRu = e.ExerciseEquipments.Select(ee => ee.Equipment.NameRu ?? ee.Equipment.Name).ToList(),
             ExerciseTypes = e.ExerciseTypes.Select(t => new ExerciseTypeDto
             {
                 Id = t.Id,
@@ -132,13 +141,17 @@ public class ExerciseRepository : IExerciseRepository
             {
                 Id = r.Id,
                 Name = r.Name,
+                NameRu = r.NameRu,
                 ImageUrl = r.ImageUrl,
                 GifUrl = r.GifUrl,
                 Category = r.Category,
                 AllowsWeight = r.AllowsWeight,
                 BodyParts = r.ExerciseBodyParts.Select(eb => eb.BodyPart.Name).ToList(),
+                BodyPartsRu = r.ExerciseBodyParts.Select(eb => eb.BodyPart.NameRu ?? eb.BodyPart.Name).ToList(),
                 PrimaryMuscles = r.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.Name).ToList(),
+                PrimaryMusclesRu = r.ExerciseMuscles.Where(em => em.Role == Core.Enums.MuscleRole.Primary).Select(em => em.Muscle.NameRu ?? em.Muscle.Name).ToList(),
                 Equipments = r.ExerciseEquipments.Select(ee => ee.Equipment.Name).ToList(),
+                EquipmentsRu = r.ExerciseEquipments.Select(ee => ee.Equipment.NameRu ?? ee.Equipment.Name).ToList(),
                 ExerciseTypes = r.ExerciseTypes.Select(t => new ExerciseTypeDto
                 {
                     Id = t.Id,
@@ -161,11 +174,13 @@ public class ExerciseRepository : IExerciseRepository
             {
                 Id = b.Id,
                 Name = b.Name,
+                NameRu = b.NameRu,
                 ImageUrl = b.ImageUrl,
                 Muscles = b.Muscles.Select(m => new MuscleDto
                 {
                     Id = m.Id,
                     Name = m.Name,
+                    NameRu = m.NameRu,
                     ImageUrl = m.ImageUrl
                 }).ToList()
             })
@@ -180,6 +195,7 @@ public class ExerciseRepository : IExerciseRepository
             {
                 Id = e.Id,
                 Name = e.Name,
+                NameRu = e.NameRu,
                 ImageUrl = e.ImageUrl
             })
             .ToListAsync();
@@ -193,6 +209,7 @@ public class ExerciseRepository : IExerciseRepository
             {
                 Id = m.Id,
                 Name = m.Name,
+                NameRu = m.NameRu,
                 ImageUrl = m.ImageUrl
             })
             .ToListAsync();

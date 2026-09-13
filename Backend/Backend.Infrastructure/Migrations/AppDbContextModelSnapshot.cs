@@ -98,6 +98,9 @@ namespace Backend.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("BodyParts");
@@ -117,6 +120,9 @@ namespace Backend.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -284,6 +290,9 @@ namespace Backend.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

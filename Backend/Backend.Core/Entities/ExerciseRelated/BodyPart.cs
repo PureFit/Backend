@@ -4,6 +4,7 @@ public class BodyPart
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
+    public string? NameRu { get; set; }
     public string? ImageUrl { get; set; }
 
     public List<Muscle> Muscles { get; set; } = [];

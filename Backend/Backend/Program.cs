@@ -141,6 +141,7 @@ builder.Services.AddHttpClient<GeminiEmbeddingClient>();
 builder.Services.AddScoped<IEmbeddingClient, GeminiEmbeddingClient>();
 builder.Services.AddScoped<IExerciseEmbeddingService, ExerciseEmbeddingService>();
 builder.Services.AddScoped<IExerciseTranslationService, ExerciseTranslationService>();
+builder.Services.AddScoped<IMetadataTranslationService, MetadataTranslationService>();
 
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
