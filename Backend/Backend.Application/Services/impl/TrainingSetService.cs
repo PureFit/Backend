@@ -567,7 +567,7 @@ public class TrainingSetService : ITrainingSetService
     {
         try
         {
-            var result = await _repository.GetPickerSetsAsync(userId, ids);
+            var result = await _repo.GetPickerSetsAsync(userId, ids);
             return BaseResponse<List<SetPickerDto>>.Ok(result);
         }
         catch (Exception ex)
