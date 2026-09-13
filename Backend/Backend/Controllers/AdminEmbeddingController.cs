@@ -25,4 +25,14 @@ public class AdminEmbeddingController : ControllerBase
         BackgroundJob.Enqueue<IExerciseEmbeddingService>(svc => svc.PopulateAllAsync(CancellationToken.None));
         return Accepted(new { message = "Embedding population started in background." });
     }
+
+    [HttpPost("translate-exercises")]
+    public IActionResult TranslateExerciseNames([FromHeader(Name = "X-Admin-Key")] string? adminKey)
+    {
+        if (adminKey != _adminKey)
+            return Unauthorized();
+
+        BackgroundJob.Enqueue<IExerciseTranslationService>(svc => svc.PopulateNameRuAsync(CancellationToken.None));
+        return Accepted(new { message = "Translation started in background." });
+    }
 }
