@@ -6,6 +6,7 @@ public class Exercise
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
+    public string? NameRu { get; set; }
     public string? ImageUrl { get; set; }
     public string? GifUrl { get; set; }
     public string? Overview { get; set; }

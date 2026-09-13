@@ -160,6 +160,9 @@ namespace Backend.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text");
+
                     b.Property<string>("Overview")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
