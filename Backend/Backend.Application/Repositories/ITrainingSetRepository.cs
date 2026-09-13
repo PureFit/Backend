@@ -10,6 +10,7 @@ public interface ITrainingSetRepository
     Task<(int TotalSessions, int UniqueUsers)> GetSessionCountsAsync(Guid setId);
     Task<Dictionary<Guid, (int TotalSessions, int UniqueUsers)>> GetSessionCountsBulkAsync(IEnumerable<Guid> setIds);
     Task<(List<TrainingSet> Items, int TotalCount)> GetByFilterAsync(TrainingSetFilter filter, Guid userId);
+    Task<List<SetPickerDto>> GetPickerSetsAsync(Guid userId, List<Guid>? ids = null);
     Task<Guid> AddAsync(TrainingSet trainingSet);
     Task UpdateAsync(TrainingSet trainingSet);
     Task DeleteAsync(TrainingSet trainingSet);

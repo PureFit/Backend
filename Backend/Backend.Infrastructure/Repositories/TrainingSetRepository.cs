@@ -95,6 +95,29 @@ public class TrainingSetRepository : ITrainingSetRepository
         return (defaultItems, totalCount);
     }
 
+    public async Task<List<SetPickerDto>> GetPickerSetsAsync(Guid userId, List<Guid>? ids = null)
+    {
+        var query = _db.TrainingSets.AsQueryable();
+
+        if (ids != null && ids.Count > 0)
+            query = query.Where(s => ids.Contains(s.Id));
+        else
+            query = query.Where(s => s.CreatedByUserId == userId);
+
+        return await query
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new SetPickerDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                SetBlocks = s.SetBlocks
+                    .OrderBy(b => b.Order)
+                    .Select(b => new BlockPickerDto { Id = b.Id, Name = b.Name, Order = b.Order, ExercisesCount = b.ExerciseEntries.Count })
+                    .ToList()
+            })
+            .ToListAsync();
+    }
+
     public async Task<Guid> AddAsync(TrainingSet trainingSet)
     {
         await _db.TrainingSets.AddAsync(trainingSet);

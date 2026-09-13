@@ -562,4 +562,18 @@ public class TrainingSetService : ITrainingSetService
             return BaseResponse<bool>.Fail(ErrorEnums.UnknownError);
         }
     }
+
+    public async Task<BaseResponse<List<SetPickerDto>>> GetPickerSetsAsync(Guid userId, List<Guid>? ids = null)
+    {
+        try
+        {
+            var result = await _repository.GetPickerSetsAsync(userId, ids);
+            return BaseResponse<List<SetPickerDto>>.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetPickerSetsAsync failed");
+            return BaseResponse<List<SetPickerDto>>.Fail(ErrorEnums.UnknownError);
+        }
+    }
 }

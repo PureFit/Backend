@@ -22,4 +22,5 @@ public interface ITrainingSetService
     Task<BaseResponse<List<TrainingSetResponse>>> GetPublicSetsByUserAsync(Guid createdByUserId, Guid currentUserId);
     Task<BaseResponse<bool>> VoteSetAsync(Guid setId, Guid userId, bool isLike);
     Task<BaseResponse<bool>> UnvoteSetAsync(Guid setId, Guid userId);
+    Task<BaseResponse<List<SetPickerDto>>> GetPickerSetsAsync(Guid userId, List<Guid>? ids = null);
 }

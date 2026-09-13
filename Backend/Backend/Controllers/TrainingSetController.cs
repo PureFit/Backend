@@ -32,6 +32,13 @@ namespace Backend.Controllers
             return result.Success ? Ok(result) : HandleError(result);
         }
 
+        [HttpGet("picker")]
+        public async Task<IActionResult> GetPickerSets([FromQuery] List<Guid>? ids = null)
+        {
+            var result = await _trSetService.GetPickerSetsAsync(GetUserIdFromClaims(), ids?.Count > 0 ? ids : null);
+            return result.Success ? Ok(result) : HandleError(result);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateSet([FromBody] CreateSetRequest request)
         {
