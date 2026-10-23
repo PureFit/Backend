@@ -6,27 +6,21 @@ namespace Backend.Infrastructure.Services;
 
 public class AIChatService : IAIChatService
 {
-    private readonly IAIService _aiService;
-    private readonly IChatPromptBuilder _promptBuilder;
     private readonly IChatHistoryCache _historyCache;
     private readonly IUsageLimiterService _usageLimiter;
-    private readonly IProfileService _profileService;
-    private readonly IPlanService _planService;
+    private readonly IChatToolProvider _toolProvider;
+    private readonly IChatAgentLoop _agentLoop;
 
     public AIChatService(
-        IAIService aiService,
-        IChatPromptBuilder promptBuilder,
         IChatHistoryCache historyCache,
         IUsageLimiterService usageLimiter,
-        IProfileService profileService,
-        IPlanService planService)
+        IChatToolProvider toolProvider,
+        IChatAgentLoop agentLoop)
     {
-        _aiService      = aiService;
-        _promptBuilder  = promptBuilder;
-        _historyCache   = historyCache;
-        _usageLimiter   = usageLimiter;
-        _profileService = profileService;
-        _planService    = planService;
+        _historyCache = historyCache;
+        _usageLimiter = usageLimiter;
+        _toolProvider = toolProvider;
+        _agentLoop    = agentLoop;
     }
 
     public async Task<BaseResponse<AIChatResponse>> ChatAsync(Guid userId, AIChatRequest request)
@@ -35,73 +29,23 @@ public class AIChatService : IAIChatService
         if (denied.HasValue)
             return BaseResponse<AIChatResponse>.Fail(denied.Value);
 
-        var context = await BuildContextAsync(userId);
         var history  = await _historyCache.GetAsync(userId);
-        var prompt   = _promptBuilder.Build(request, context, history);
-        var response = await _aiService.ChatAsync(prompt);
+        var tools    = _toolProvider.GetTools();
+        var messages = new List<ChatMessageDto>(history)
+        {
+            new() { Role = "user", Content = request.Message }
+        };
+
+        var result = await _agentLoop.RunAsync(messages, tools, userId);
 
         await _historyCache.AppendAsync(userId, new ChatMessageDto { Role = "user",      Content = request.Message });
-        await _historyCache.AppendAsync(userId, new ChatMessageDto { Role = "assistant", Content = response.Content });
-        await _usageLimiter.RecordAsync(userId, response.TokensUsed);
+        await _historyCache.AppendAsync(userId, new ChatMessageDto { Role = "assistant", Content = result.FinalContent });
+        await _usageLimiter.RecordAsync(userId, result.TotalTokens);
 
-        return BaseResponse<AIChatResponse>.Ok(new AIChatResponse { Message = response.Content });
+        return BaseResponse<AIChatResponse>.Ok(new AIChatResponse { Message = result.FinalContent });
     }
 
-    public async Task ClearHistoryAsync(Guid userId)
-    {
-        await _historyCache.ClearAsync(userId);
-    }
+    public Task ClearHistoryAsync(Guid userId) => _historyCache.ClearAsync(userId);
 
-    public Task<UserUsageDto> GetUsageAsync(Guid userId) =>
-        _usageLimiter.GetUsageAsync(userId);
-
-    // ── private ──────────────────────────────────────────────────────────────
-
-    private async Task<UserChatContext> BuildContextAsync(Guid userId)
-    {
-        var context = new UserChatContext();
-
-        var profileResult = await _profileService.GetProfileAsync(userId);
-        if (profileResult.Success && profileResult.Data is { } profile)
-        {
-            context.Sex          = profile.Sex;
-            context.WeightKg     = profile.WeightKg;
-            context.HeightCm     = profile.HeightCm;
-            context.FitnessLevel = profile.FitnessLevel;
-            context.AgeYears     = CalculateAge(profile.DateOfBirth);
-        }
-
-        var planResult = await _planService.GetPlanAsync(userId);
-        if (planResult.Success && planResult.Data is { } plan)
-        {
-            var currentWeek = plan.Weeks.FirstOrDefault(w => w.WeekStatus == "InProgress")
-                           ?? plan.Weeks.FirstOrDefault();
-
-            context.ActivePlan = new ActivePlanSummary
-            {
-                PlanType      = plan.PlanType,
-                PlanSubType   = plan.PlanSubType,
-                WeeksDuration = plan.WeeksDuration,
-                CurrentWeek   = currentWeek?.WeekNumber ?? 1,
-                UpcomingTrainings = currentWeek?.PlanTrainings
-                    .Select(t => new UpcomingTrainingSummary
-                    {
-                        PlannedDate     = t.StartPlannedDate,
-                        TrainingSetName = t.TrainingSet?.Name,
-                        IsCompleted     = t.IsCompleted
-                    })
-                    .ToList() ?? []
-            };
-        }
-
-        return context;
-    }
-
-    private static int? CalculateAge(DateOnly dateOfBirth)
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var age = today.Year - dateOfBirth.Year;
-        if (dateOfBirth > today.AddYears(-age)) age--;
-        return age;
-    }
+    public Task<UserUsageDto> GetUsageAsync(Guid userId) => _usageLimiter.GetUsageAsync(userId);
 }

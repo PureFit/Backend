@@ -19,6 +19,10 @@ internal class GroqRequest
     [JsonPropertyName("response_format")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public GroqResponseFormat? ResponseFormat { get; set; }
+
+    [JsonPropertyName("tools")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<GroqTool>? Tools { get; set; }
 }
 
 internal class GroqMessage
@@ -27,7 +31,58 @@ internal class GroqMessage
     public string Role { get; set; } = null!;
 
     [JsonPropertyName("content")]
-    public string Content { get; set; } = null!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Content { get; set; }
+
+    [JsonPropertyName("tool_calls")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<GroqToolCall>? ToolCalls { get; set; }
+
+    [JsonPropertyName("tool_call_id")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ToolCallId { get; set; }
+}
+
+internal class GroqTool
+{
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = "function";
+
+    [JsonPropertyName("function")]
+    public GroqFunction Function { get; set; } = null!;
+}
+
+internal class GroqFunction
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = null!;
+
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = null!;
+
+    [JsonPropertyName("parameters")]
+    public object Parameters { get; set; } = null!;
+}
+
+internal class GroqToolCall
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = null!;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = "function";
+
+    [JsonPropertyName("function")]
+    public GroqToolCallFunction Function { get; set; } = null!;
+}
+
+internal class GroqToolCallFunction
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = null!;
+
+    [JsonPropertyName("arguments")]
+    public string Arguments { get; set; } = "{}";
 }
 
 internal class GroqResponseFormat
@@ -55,4 +110,7 @@ internal class GroqChoice
 {
     [JsonPropertyName("message")]
     public GroqMessage Message { get; set; } = null!;
+
+    [JsonPropertyName("finish_reason")]
+    public string? FinishReason { get; set; }
 }

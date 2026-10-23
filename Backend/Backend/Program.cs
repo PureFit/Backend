@@ -156,6 +156,7 @@ builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<IUsageLimiterService, UsageLimiterService>();
 builder.Services.AddScoped<IChatPromptBuilder, ChatPromptBuilder>();
 builder.Services.AddScoped<IChatHistoryCache, ChatHistoryCache>();
+builder.Services.AddScoped<IChatAgentLoop, ChatAgentLoop>();
 
 builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
 builder.Services.AddScoped<IAchievementService, AchievementService>();
